@@ -311,6 +311,14 @@ function pickVoice(){
   voice = vs.find(v => /^tr[-_]tr/i.test(v.lang)) || vs.find(v => /^tr/i.test(v.lang)) || null;
 }
 if (hasTTS){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+// iPad/iPhone: konuşma ancak bir dokunuşun içinde başlatılırsa açılır. İlk dokunuşta sessiz bir "kilit açma" yapılır.
+let ttsUnlocked = false;
+function unlockTTS(){
+  if (ttsUnlocked || !hasTTS) return; ttsUnlocked = true;
+  try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; u.lang = 'tr-TR'; speechSynthesis.speak(u); } catch(e){}
+}
+addEventListener('pointerdown', unlockTTS, {capture:true});
+addEventListener('touchend', unlockTTS, {capture:true});
 function sayOne(t, my){
   return new Promise(res => {
     if (my !== speakSeq) return res();
@@ -361,7 +369,7 @@ function sfx(n){
 
 /* ---------- kayıt (localStorage) ---------- */
 const KEY = 'naneBahcesi.v1';
-let save = {stars:0, done:[false,false,false,false,false], name:''};
+let save = {stars:0, done:[false,false,false,false,false], name:'', speed:0};
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.done)) save = Object.assign(save, s); } catch(e){}
 function persist(){ try { localStorage.setItem(KEY, JSON.stringify(save)); } catch(e){} }
 const unlocked = i => i===0 || save.done[i-1];
@@ -519,7 +527,7 @@ function showMenu(first){
   const reset = h('button',{class:'iconbtn','aria-label':'Sıfırla'}, '🗑️');
   reset.addEventListener('click', () => {
     if (Date.now() - armed < 3000){
-      save = {stars:0, done:[false,false,false,false,false], name:''}; persist(); speak('Oyun baştan başlıyor.'); showMenu();
+      save = {stars:0, done:[false,false,false,false,false], name:'', speed:0}; persist(); speak('Oyun baştan başlıyor.'); showMenu();
     } else { armed = Date.now(); reset.classList.add('armed'); speak('Her şeyi silmek için bir daha dokun.'); setTimeout(()=>reset.classList.remove('armed'), 3000); }
   });
   screen.append(h('div',{class:'mfoot'}, cert, reset));
@@ -896,7 +904,8 @@ function picSentQ(d){
 function speedQ(){
   return { render(root, ctx){
     ctx.prompt = () => ['Hızlı okuma! Cümle ekranda görünecek. Önce sen oku. Sonra ben okuyacağım, sen kontrol et. Başlamak için oynat düğmesine dokun.'];
-    let i = 0, running = false, run = 0;
+    // Hızlı okuma uzun: kalınan cümle kaydedilir, menüye dönülse bile oradan devam edilir.
+    let i = Math.min(save.speed|0, ALL_SENTENCES.length-1), running = false, run = 0;
     const holder = h('div',{class:'speed'});
     const dots = [0,1,2].map(() => h('span'));
     const prog = h('div',{class:'prog'});
@@ -910,8 +919,8 @@ function speedQ(){
         if (!running || my !== run || !ctx.alive()) return;
         await wait(800);
         if (!running || my !== run || !ctx.alive()) return;
-        if (i === ALL_SENTENCES.length-1){ running = false; btn.classList.add('hidden'); ctx.win(['Bütün cümleleri okudun!']); return; }
-        i++; show();
+        if (i === ALL_SENTENCES.length-1){ running = false; save.speed = 0; persist(); btn.classList.add('hidden'); ctx.win(['Bütün cümleleri okudun!']); return; }
+        i++; save.speed = i; persist(); show();
       }
     }
     btn.addEventListener('click', () => {
