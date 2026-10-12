@@ -94,10 +94,10 @@ button.wcard{touch-action:manipulation}
 
 /* ---------- ana menü: bahçe yolu ---------- */
 .mtitle{font-size:clamp(48px,12vw,80px);font-weight:700;color:var(--leaf-d);text-shadow:0 4px 0 #fff;text-align:center}
-.garden{position:relative;width:min(100%,calc(72dvh * .75),520px);aspect-ratio:3/4;margin:0 auto;flex-shrink:0}
+.garden{position:relative;width:min(100%,460px);aspect-ratio:1/2;margin:0 auto;flex-shrink:0}
 .garden svg{position:absolute;inset:0;width:100%;height:100%}
 .lvl{
-  position:absolute;width:clamp(88px,24vw,118px);height:clamp(88px,24vw,118px);transform:translate(-50%,-50%);
+  position:absolute;width:clamp(80px,22vw,108px);height:clamp(80px,22vw,108px);transform:translate(-50%,-50%);
   border-radius:8% 70% 8% 70%;background:linear-gradient(135deg,#8fe0ad,var(--leaf));
   box-shadow:0 6px 0 var(--leaf-d),0 12px 22px rgba(0,0,0,.14);display:flex;flex-direction:column;
   align-items:center;justify-content:center;color:#fff;transition:transform .12s
@@ -196,6 +196,69 @@ button.wcard{touch-action:manipulation}
 .timer span.on{background:var(--leaf);border-color:var(--leaf)}
 .prog{font-size:30px;font-weight:700;color:var(--soft)}
 
+/* ---------- 5: nokta mı soru mu ---------- */
+.pbox{display:inline-grid;place-items:center;min-width:54px;min-height:64px;border:4px dashed var(--cap);border-radius:14px;color:var(--cap)}
+.pbox.good{border-style:solid;background:#fff1d6}
+.pchoice{font-size:80px;min-width:130px;min-height:110px;font-weight:700;line-height:1}
+
+/* ---------- 6: hafıza kartları ---------- */
+.mgrid{display:grid;gap:12px;width:min(94vw,520px)}
+.mcard{position:relative;display:block;width:100%;aspect-ratio:4/5;min-height:64px;perspective:700px}
+.mcard .in{position:absolute;inset:0;transition:transform .45s;transform-style:preserve-3d}
+.mcard.open .in{transform:rotateY(180deg)}
+.mcard .f,.mcard .b{position:absolute;inset:0;border-radius:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center;box-shadow:var(--shadow)}
+.mcard .b{background:linear-gradient(135deg,#8fe0ad,var(--leaf));font-size:clamp(30px,8vw,44px)}
+.mcard .f{background:#fff;transform:rotateY(180deg);font-weight:700;font-size:clamp(28px,7.5vw,42px)}
+.mcard .f.long{font-size:clamp(18px,5vw,30px)}
+.mcard .f.emo{font-size:clamp(42px,11vw,64px)}
+.mcard.matched .f{background:#c9f5d8;box-shadow:0 0 0 5px #8fe0ad}
+
+/* ---------- 7: eksik harf ---------- */
+.lword{display:flex;gap:8px;justify-content:center;cursor:pointer}
+.lbox{width:clamp(46px,13vw,80px);height:clamp(66px,17vw,96px);border-radius:18px;background:var(--cream);box-shadow:var(--shadow);
+  display:grid;place-items:center;font-size:clamp(38px,10vw,62px);font-weight:700}
+.lbox.blank{background:rgba(255,255,255,.5);border:4px dashed var(--new);box-shadow:none}
+.lbox.blank.good{border:4px solid var(--leaf);background:#c9f5d8}
+
+/* ---------- 8: doğru mu ---------- */
+.scene.wide{width:min(92vw,440px);min-height:180px}
+.scene.wide .ppl{font-size:clamp(60px,16vw,90px)}
+.tleaves{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.tleaf{position:relative;width:52px;height:52px;font-size:38px;display:grid;place-items:center;border-radius:14px;cursor:pointer;transition:background .2s}
+.tleaf.counted{background:#fff6c4}
+.tleaf .cn{position:absolute;bottom:-6px;right:-6px;min-width:24px;height:24px;border-radius:12px;background:var(--leaf);color:#fff;font-size:16px;font-weight:700;display:grid;place-items:center}
+.thumb{font-size:64px;min-width:130px;min-height:104px}
+
+/* ---------- 9: sayı treni ---------- */
+.baskets{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+.basket2{width:clamp(140px,42vw,220px);min-height:190px;border-radius:24px 24px 60px 60px;background:#f6e3c4;border:6px solid #d9b07a;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 8px;gap:6px;box-shadow:var(--shadow)}
+.basket2 .bl{display:flex;flex-wrap:wrap;justify-content:center;font-size:clamp(26px,7vw,34px);line-height:1.15}
+.basket2 .bi{font-size:44px}
+.bnum{font-size:56px;font-weight:700;min-height:64px;text-align:center;color:var(--leaf-d)}
+.ndigit{font-size:72px;font-weight:700;color:var(--leaf-d);min-width:90px;text-align:center}
+
+/* ---------- 10: kulak yazısı ---------- */
+.dict{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:center}
+.dw{display:flex;gap:6px}
+.ds{width:clamp(42px,11vw,64px);height:clamp(58px,14vw,80px);border-radius:14px;border:4px dashed #b9cfc0;background:rgba(255,255,255,.6);
+  display:grid;place-items:center;font-size:clamp(34px,9vw,52px);font-weight:700;transition:background .2s}
+.ds.full{border-style:solid;border-color:#9cc7ff;background:#fff}
+.ds.cur{border-color:var(--leaf);box-shadow:0 0 0 4px #c9f5d8}
+.ds.ok{border-color:var(--leaf);background:#e6f9ec}
+.ds.bad{border-style:solid;border-color:#f5c542;background:#fff6c4}
+.kb{display:flex;flex-direction:column;gap:12px;align-items:center}
+.key{width:clamp(52px,15vw,72px);height:clamp(52px,15vw,72px);border-radius:20px;background:#fff;box-shadow:var(--shadow);font-size:clamp(34px,9vw,46px);font-weight:700}
+.key.kcap{background:#fff1d6}
+.kb .row{gap:8px}
+.ntrain{gap:16px 6px}
+.ntrain .loco{font-size:clamp(44px,12vw,70px)}
+.ntrain .wagon{min-width:clamp(48px,13vw,90px);padding:6px 4px 16px}
+#dots.many{gap:5px}
+#dots.many .dot{width:11px;height:11px;border-width:2px}
+.key:active{transform:translateY(3px)}
+.answer .sentence{box-shadow:0 0 0 5px #8fe0ad,var(--shadow)}
+
 /* ---------- kutlama ---------- */
 #overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(223,243,255,.85);overflow:hidden}
 #overlay.show{display:flex}
@@ -266,6 +329,15 @@ const ALL_SENTENCES = [
 const TRAIN_Q = ['Nene nane ne?','Nene ana ne?','Nene, anne ne?','Anne 2 nane ne?','Nane ne nene?','Anne nene ne?','Nene, ana ne?','Anne nane ne?'];
 const TRAIN_D = ['Anne nane an.','Nene nane an.','An anne an nene.','An, nene nane an.','A anne nene 3 nane.','An, anne nane an.','Anne ana an.','A anne 3 nane.'];
 const PIC = {anne:'👩', nene:'👵', nane:'🌿', ana:'👧'};
+const PIC_X = Object.assign({annene:'👩', nanene:'🌿', nenene:'👵'}, PIC);
+const WORDS = ['a','an','ana','anne','annene','nan','nane','nanene','nene','nenene','ene'];
+const PUNCT_Q = ['Nene nane ne?','Anne ne?','Ana ne?','Nane ne?','Anne nene ne?','Nene ana ne?','Anne 2 nane ne?'];
+const PUNCT_D = ['An ana.','Anne nane an.','Nene nane.','Ana 2 nane.','An nene.','A anne nane.','An anne an.'];
+const MEM_WORDS = ['an','nan','ene','annene','nanene','nenene'];
+// Eksik harf: w = kelime, i = boş bırakılan harfin yeri. İlk ikisi (n_ne) her zaman sorulur.
+const MISS = [{w:'nane',i:1},{w:'nene',i:1},{w:'anne',i:2},{w:'nene',i:0},{w:'nane',i:2},{w:'ana',i:1},{w:'annene',i:4},{w:'anne',i:0}];
+// Doğru mu: cümlenin öznesi ve resimde görünen kişiler
+const WHO = [{s:'Ana',w:['ana']},{s:'Anne',w:['anne']},{s:'Nene',w:['nene']},{s:'A anne',w:['anne']},{s:'A anne nene',w:['anne','nene']}];
 const PIC_SENT = [
   {s:'A anne nene 3 nane.', p:{who:['anne','nene'],n:3}, d:[{who:['anne','nene'],n:2},{who:['nene'],n:3}]},
   {s:'Ana 2 nane.',         p:{who:['ana'],n:2},          d:[{who:['ana'],n:3},{who:['anne'],n:2}]},
@@ -369,8 +441,11 @@ function sfx(n){
 
 /* ---------- kayıt (localStorage) ---------- */
 const KEY = 'naneBahcesi.v1';
-let save = {stars:0, done:[false,false,false,false,false], name:'', speed:0};
+const NLEVELS = 10;
+const freshSave = () => ({stars:0, done:Array(NLEVELS).fill(false), name:'', speed:0});
+let save = freshSave();
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.done)) save = Object.assign(save, s); } catch(e){}
+while (save.done.length < NLEVELS) save.done.push(false);   // eski 5 bölümlük kayıtlar korunur
 function persist(){ try { localStorage.setItem(KEY, JSON.stringify(save)); } catch(e){} }
 const unlocked = i => i===0 || save.done[i-1];
 
@@ -388,6 +463,7 @@ $('#btnReplay').addEventListener('click', () => { sfx('tap'); if (replayFn) repl
 $('#starBox').addEventListener('click', () => speak(`${save.stars} yıldız`));
 function renderDots(){
   const d = $('#dots'); d.innerHTML = '';
+  d.classList.toggle('many', !!cur && cur.qs.length > 10);
   if (!cur) return;
   cur.qs.forEach((_,i) => d.append(h('span',{class:'dot'+(i<cur.idx?' done':i===cur.idx?' cur':'')})));
 }
@@ -445,12 +521,18 @@ function zoneAt(x,y){ for (const e of document.elementsFromPoint(x,y)){ const z 
    OYUN AKIŞI
    ===================================================================== */
 const LEVELS = [
-  {icon:'🎈', intro:'Birinci bölüm: Ses Balonları! Söylediğim sesi bul, balonu patlat.', make: makeL1, x:22, y:86},
-  {icon:'🪜', intro:'İkinci bölüm: Kelime Merdiveni! Yukarı oka dokun, merdivene çık. Her basamakta kelime büyüyor.', make: makeL2, x:72, y:68},
-  {icon:'🖼️', intro:'Üçüncü bölüm: Resim ile Kelime! Resme bak, doğru kelimeyi bul.', make: makeL3, x:28, y:50},
-  {icon:'🔢', intro:'Dördüncü bölüm: Nane Sayma! Haydi nane yapraklarını sayalım.', make: makeL4, x:74, y:32},
-  {icon:'🚂', intro:'Beşinci bölüm: Cümle Treni! Kelimeleri vagonlara diz, cümleyi kur.', make: makeL5, x:36, y:13}
+  {icon:'🎈', intro:'Birinci bölüm: Ses Balonları! Söylediğim sesi bul, balonu patlat.', make: makeL1, x:26, y:95},
+  {icon:'🪜', intro:'İkinci bölüm: Kelime Merdiveni! Yukarı oka dokun, merdivene çık. Her basamakta kelime büyüyor.', make: makeL2, x:72, y:85},
+  {icon:'🖼️', intro:'Üçüncü bölüm: Resim ile Kelime! Resme bak, doğru kelimeyi bul.', make: makeL3, x:30, y:75},
+  {icon:'🔢', intro:'Dördüncü bölüm: Nane Sayma! Haydi nane yapraklarını sayalım.', make: makeL4, x:74, y:65},
+  {icon:'🚂', intro:'Beşinci bölüm: Cümle Treni! Kelimeleri vagonlara diz, cümleyi kur.', make: makeL5, x:28, y:55},
+  {icon:'🃏', intro:'Altıncı bölüm: Hafıza Kartları! Kartları aç, eşlerini bul.', make: makeL6, x:70, y:45},
+  {icon:'🧩', intro:'Yedinci bölüm: Eksik Harf! Kelimeden bir harf kaçmış. Haydi onu bulalım.', make: makeL7, x:28, y:35},
+  {icon:'👍', intro:'Sekizinci bölüm: Doğru mu? Resme bak, cümleyi oku, doğru mu yanlış mı söyle.', make: makeL8, x:72, y:25},
+  {icon:'🚃', intro:'Dokuzuncu bölüm: Sayı Treni! Sayılarla oynayalım.', make: makeL9, x:32, y:15},
+  {icon:'🏆', intro:'Onuncu bölüm: Kulak Yazısı ve Büyük Final! Dinle ve yaz. Ben söyleyeceğim, sen bakmadan yazacaksın.', make: makeL10, x:64, y:5}
 ];
+const LAST = LEVELS.length - 1;
 
 function startLevel(n){
   if (!unlocked(n)){ sfx('soft'); speak('Bu yaprak daha kapalı. Önce önceki bölümü bitirelim.'); return; }
@@ -479,7 +561,7 @@ function runQuestion(){
   };
   q.render(screen, ctx);
   replayFn = () => speak(ctx.prompt());
-  speak([...(cur.idx===0 ? [LEVELS[cur.level].intro] : []), ...ctx.prompt()]);
+  speak([...(cur.idx===0 ? [LEVELS[cur.level].intro] : []), ...(q.pre ? [q.pre] : []), ...ctx.prompt()]);
 }
 function nextQuestion(){
   cur.idx++;
@@ -508,7 +590,7 @@ function showMenu(first){
     <path d="M ${[50+',104', ...pts, '50,-4'].join(' L ')}" fill="none" stroke="#f3dfb6" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
     <path d="M ${[50+',104', ...pts, '50,-4'].join(' L ')}" fill="none" stroke="#e9cf9b" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
   </svg>`;
-  [['🌷',8,70],['🌼',90,88],['🦋',86,48],['🌻',10,30],['🐝',62,6],['🌸',92,16],['🍀',54,40]].forEach(([e,x,y]) =>
+  [['🌷',8,84],['🌼',92,96],['🦋',92,54],['🌸',8,64],['🍀',52,70],['🍄',50,30],['🌱',92,36],['🌻',8,24],['🐝',90,12],['🌼',10,4]].forEach(([e,x,y]) =>
     g.append(h('span',{class:'deco',style:`left:${x}%;top:${y}%`}, e)));
   const nextIdx = save.done.indexOf(false);
   LEVELS.forEach((l,i) => {
@@ -520,6 +602,9 @@ function showMenu(first){
     g.append(b);
   });
   screen.append(g);
+  // Sıradaki yaprak ekranda görünsün (yol uzun, telefonda kaydırmak gerekebilir).
+  const nb = g.querySelector('.lvl.next');
+  if (nb) requestAnimationFrame(() => nb.scrollIntoView({block:'center'}));
   const all = save.done.every(Boolean);
   const cert = h('button',{class:'iconbtn'+(all?'':' dim'),'aria-label':'Sertifika'}, all ? '🏅' : '🔒');
   cert.addEventListener('click', () => all ? showCert() : (sfx('soft'), speak('Bütün yaprakları bitirince burada bir madalya seni bekliyor!')));
@@ -527,7 +612,7 @@ function showMenu(first){
   const reset = h('button',{class:'iconbtn','aria-label':'Sıfırla'}, '🗑️');
   reset.addEventListener('click', () => {
     if (Date.now() - armed < 3000){
-      save = {stars:0, done:[false,false,false,false,false], name:'', speed:0}; persist(); speak('Oyun baştan başlıyor.'); showMenu();
+      save = freshSave(); persist(); speak('Oyun baştan başlıyor.'); showMenu();
     } else { armed = Date.now(); reset.classList.add('armed'); speak('Her şeyi silmek için bir daha dokun.'); setTimeout(()=>reset.classList.remove('armed'), 3000); }
   });
   screen.append(h('div',{class:'mfoot'}, cert, reset));
@@ -544,14 +629,14 @@ function levelComplete(){
   for (let i=0;i<34;i++) ov.append(h('span',{class:'confetti',style:`left:${Math.random()*100}%;animation-duration:${2.5+Math.random()*2.5}s;animation-delay:${Math.random()*1.5}s`}, pick(['🌿','⭐','🎉','🌼','🍃','✨'])));
   const box = h('div',{class:'celebrate'},
     h('div',{class:'stars'}, ...[0,1,2].map(i => h('span',{style:`animation-delay:${.2+i*.25}s`},'⭐'))),
-    h('div',{style:'font-size:70px'}, n===4 ? '🏅' : '🌿🔓'));
+    h('div',{style:'font-size:70px'}, n===LAST ? '🏅' : '🌿🔓'));
   const btns = h('div',{class:'row'});
   const home = h('button',{class:'bigbtn sun','aria-label':'Ana menü'},'🏠'); home.addEventListener('click', () => showMenu());
   btns.append(home);
-  if (n < 4){ const nx = h('button',{class:'bigbtn','aria-label':'Sonraki bölüm'},'▶️'); nx.addEventListener('click', () => { ov.classList.remove('show'); startLevel(n+1); }); btns.append(nx); }
+  if (n < LAST){ const nx = h('button',{class:'bigbtn','aria-label':'Sonraki bölüm'},'▶️'); nx.addEventListener('click', () => { ov.classList.remove('show'); startLevel(n+1); }); btns.append(nx); }
   else { const c = h('button',{class:'bigbtn pinkb','aria-label':'Sertifika'},'🏅'); c.addEventListener('click', () => showCert()); btns.append(c); }
   box.append(btns); ov.append(box);
-  const msg = n===4
+  const msg = n===LAST
     ? ['Tebrikler! Bütün bölümleri bitirdin! Sen bir Okuma Yıldızısın! Madalyana dokun.']
     : ['Harika! Bölümü bitirdin! Yeni bir nane yaprağı açıldı! Devam etmek için oynat düğmesine dokun.'];
   replayFn = () => speak(msg);
@@ -838,9 +923,12 @@ function orderQ(){
    BÖLÜM 5 — CÜMLE TRENİ
    ===================================================================== */
 function makeL5(){
-  const trains = shuffle([...shuffle(TRAIN_Q).slice(0,2), ...shuffle(TRAIN_D).slice(0,2)]).map(trainQ);
-  const pics = shuffle([PIC_SENT[0], ...shuffle(PIC_SENT.slice(1)).slice(0,2)]).map(picSentQ);
-  return [...trains, ...pics, speedQ()];
+  const trains = shuffle([pick(TRAIN_Q), pick(TRAIN_D), Math.random()<.5 ? pick(TRAIN_Q.slice(4)) : pick(TRAIN_D.slice(4))]);
+  const uniq = [...new Set(trains)];
+  while (uniq.length < 3){ const s = pick([...TRAIN_Q, ...TRAIN_D]); if (!uniq.includes(s)) uniq.push(s); }
+  const pics = shuffle([PIC_SENT[0], ...shuffle(PIC_SENT.slice(1)).slice(0,1)]).map(picSentQ);
+  const puncts = shuffle([pick(PUNCT_Q), pick(PUNCT_D)]).map(punctQ);
+  return [...uniq.map(trainQ), ...pics, ...puncts];
 }
 function trainQ(sent){
   return { render(root, ctx){
@@ -901,6 +989,308 @@ function picSentQ(d){
     root.append(h('div',{class:'row'}, sentenceEl(d.s), ear), h('div',{class:'row'}, cards));
   }};
 }
+function punctQ(sent){
+  return { render(root, ctx){
+    const p = sent.slice(-1), body = sent.slice(0,-1);
+    ctx.prompt = () => ['Dinle.', sent, 'Bu cümle bir soru mu? Soruysa soru işaretine, soru değilse noktaya dokun.'];
+    const box = h('span',{class:'pbox'});
+    const sEl = sentenceEl(body); sEl.append(box);
+    const ear = h('button',{class:'iconbtn ear','aria-label':'Dinle'},'👂'); ear.addEventListener('click', () => speak(sent));
+    const btns = ['.','?'].map(m => {
+      const b = h('button',{class:'bigbtn sun pchoice','aria-label':m==='?'?'Soru işareti':'Nokta'}, m);
+      b.addEventListener('click', () => {
+        if (ctx.busy) return;
+        if (m === p){
+          box.textContent = p; box.classList.add('good'); flash(box,'appear'); b.classList.add('good');
+          ctx.win([p === '?' ? 'Evet! Bu bir soru cümlesi. Sonunda soru işareti var.' : 'Evet! Bu düz bir cümle. Sonunda nokta var.', sent]);
+        } else {
+          flash(b,'wiggle'); ctx.oops([], ['Cümleyi bir daha dinle.', sent]);
+          flash(btns[m==='?'?0:1],'hint');
+        }
+      });
+      return b;
+    });
+    root.append(h('div',{class:'row'}, sEl, ear), h('div',{class:'row'}, btns));
+  }};
+}
+
+/* ---------- ortak: dokununca sayılan yapraklar ve rakam düğmeleri ---------- */
+function leafCounter(n){
+  const el = h('div',{class:'tleaves'}), leaves = []; let c = 0;
+  const reset = () => { leaves.forEach(l => { l.classList.remove('counted'); l.querySelector('.cn')?.remove(); }); c = 0; };
+  const add = () => {
+    const l = h('span',{class:'tleaf',role:'button'},'🌿');
+    l.addEventListener('click', e => {
+      e.stopPropagation();
+      if (l.classList.contains('counted')){
+        if (c === leaves.length){ reset(); speak('Baştan sayalım.'); } else speak(NUM[+l.dataset.n]);
+        return;
+      }
+      c++; l.dataset.n = c; l.classList.add('counted'); l.append(h('span',{class:'cn'}, String(c))); sfx('tap'); speak(NUM[c]);
+    });
+    leaves.push(l); el.append(l); return l;
+  };
+  for (let i=0;i<n;i++) add();
+  return {el, add};
+}
+function numPad(onPick){
+  const pad = h('div',{class:'numpad'}), btns = [];
+  for (let i=1;i<=10;i++){ const b = h('button',{class:'num'}, String(i)); b.addEventListener('click', () => onPick(i,b)); btns.push(b); pad.append(b); }
+  return {pad, btns};
+}
+
+/* =====================================================================
+   BÖLÜM 6 — HAFIZA KARTLARI
+   ===================================================================== */
+function makeL6(){ return [memoryQ(4,0), memoryQ(4,1), memoryQ(4,2)]; }   // 8 → 10 → 12 kart
+function memoryQ(np, nw){
+  return { render(root, ctx){
+    ctx.prompt = () => ['Kartlara dokun, ikişer ikişer aç. Aynı kelimeyi ya da kelimeyle resmini bul.'];
+    const pics = shuffle(Object.keys(PIC)).slice(0,np), words = shuffle(MEM_WORDS).slice(0,nw);
+    const deck = shuffle([...pics.flatMap(w => [{k:w,t:w},{k:w,e:PIC[w]}]), ...words.flatMap(w => [{k:w,t:w},{k:w,t:w}])]);
+    const grid = h('div',{class:'mgrid',style:`grid-template-columns:repeat(${deck.length<=6?3:4},1fr)`});
+    let open = [], lock = false, found = 0;
+    deck.forEach(d => {
+      const face = d.e ? h('div',{class:'f emo'}, d.e) : h('div',{class:'f'+(d.t.length>4?' long':'')}, T(d.t));
+      const c = h('button',{class:'mcard','aria-label':'Kart'}, h('div',{class:'in'}, h('div',{class:'b'},'🌿'), face));
+      c.addEventListener('click', () => {
+        if (c.classList.contains('matched')){ speak(d.k); return; }
+        if (lock || ctx.busy || c.classList.contains('open')) return;
+        c.classList.add('open'); sfx('tap'); open.push({c,d});
+        if (open.length < 2){ speak(d.k); return; }
+        const [x,y] = open; open = [];
+        if (x.d.k === y.d.k){
+          found += 2; x.c.classList.add('matched'); y.c.classList.add('matched');
+          if (found === deck.length) ctx.win([d.k, 'Hepsini buldun!']);
+          else { sfx('ok'); ctx.say([d.k, 'Eşini buldun!']); }
+        } else {
+          lock = true; speak(d.k);
+          setTimeout(() => { x.c.classList.remove('open'); y.c.classList.remove('open'); lock = false; }, 1500);
+        }
+      });
+      grid.append(c);
+    });
+    root.append(grid);
+  }};
+}
+
+/* =====================================================================
+   BÖLÜM 7 — EKSİK HARF
+   ===================================================================== */
+function makeL7(){ return shuffle([MISS[0], MISS[1], ...shuffle(MISS.slice(2)).slice(0,5)]).map(missQ); }
+function missQ({w, i}){
+  return { render(root, ctx){
+    const ans = w[i];
+    ctx.prompt = () => ['Dinle:', w, 'Boş kutuya hangi harf gelir? Harfi kutuya sürükle ya da harfe dokun.'];
+    const boxes = [...w].map((c,k) => k===i ? h('div',{class:'lbox blank','data-zone':'blank'}) : h('div',{class:'lbox'}, T(c)));
+    const word = h('div',{class:'lword'}, boxes); word.addEventListener('click', () => speak(w));
+    const pic = h('div',{class:'picbig'},'❔');
+    const cards = {};
+    function tryL(L, card){
+      if (ctx.busy) return;
+      if (L === ans){
+        boxes[i].append(T(L)); boxes[i].classList.add('good'); flash(boxes[i],'appear'); card.classList.add('good');
+        pic.textContent = PIC_X[w]; flash(pic,'appear');
+        const pair = (w==='nane' || w==='nene') && i===1;
+        ctx.win(pair ? [w, `${w==='nane'?'nene':'nane'} değil, ${w}! Bir harf değişince kelime de değişir.`] : [w]);
+      } else {
+        flash(card,'wiggle');
+        const formed = w.slice(0,i) + L + w.slice(i+1);
+        ctx.oops(WORDS.includes(formed) ? [`Bu harfle ${formed} olur.`] : [], ['Biz', w, 'kelimesini arıyoruz.']);
+        flash(cards[ans],'hint');
+      }
+    }
+    const row = h('div',{class:'row'}, ['a','n','e'].map(L => {
+      const c = h('div',{class:'wcard',role:'button'}, T(L)); cards[L] = c;
+      dragTap(c, { onTap: () => tryL(L,c), onDrop: z => { if (z && z.dataset.zone === 'blank') tryL(L,c); } });
+      return c;
+    }));
+    root.append(pic, word, row);
+  }};
+}
+
+/* =====================================================================
+   BÖLÜM 8 — DOĞRU MU?
+   ===================================================================== */
+function makeL8(){ return shuffle([true,true,true,true,false,false,false]).map((t,k) => truthQ(t, k%2 ? 'who' : 'num')); }
+function truthQ(isTrue, how){
+  const base = pick(WHO), n = rand(1,10), right = `${base.s} ${n} nane.`;
+  let shown = right;
+  if (!isTrue){
+    if (how === 'num'){ let m; do { m = rand(Math.max(1,n-3), Math.min(10,n+3)); } while (m === n); shown = `${base.s} ${m} nane.`; }
+    else { const o = pick(WHO.filter(x => x.w.join() !== base.w.join())); shown = `${o.s} ${n} nane.`; }
+  }
+  return { render(root, ctx){
+    ctx.prompt = () => ['Resme bak. Cümleyi oku. Cümle resme uyuyor mu? Doğruysa yukarı başparmağa, yanlışsa aşağı başparmağa dokun.'];
+    const counter = leafCounter(n);
+    const sc = h('div',{class:'scene wide'}, h('div',{class:'ppl'}, base.w.map(x => PIC[x]).join('')), counter.el);
+    const sEl = sentenceEl(shown);
+    const ear = h('button',{class:'iconbtn ear','aria-label':'Dinle'},'👂'); ear.addEventListener('click', () => speak(shown));
+    const fixRow = h('div',{class:'row hidden'});
+    const up = h('button',{class:'bigbtn thumb','aria-label':'Doğru'},'👍');
+    const down = h('button',{class:'bigbtn sun thumb','aria-label':'Yanlış'},'👎');
+    const answer = (v, b) => {
+      if (ctx.busy) return;
+      if (v === isTrue){
+        b.classList.add('good');
+        if (isTrue) ctx.win([shown, 'Evet, bu cümle doğru!']);
+        else {
+          const fix = sentenceEl(right); fix.classList.add('good');
+          fixRow.append(h('span',{style:'font-size:48px'},'👉'), fix); fixRow.classList.remove('hidden'); flash(fix,'appear');
+          ctx.win(['Evet, bu cümle yanlış. Doğrusu şöyle:', right]);
+        }
+      } else {
+        flash(b,'wiggle');
+        ctx.oops([], ['Resme bir daha bak. Yapraklara dokunup sayabilirsin.']);
+        flash(isTrue ? up : down,'hint');
+      }
+    };
+    up.addEventListener('click', () => answer(true, up));
+    down.addEventListener('click', () => answer(false, down));
+    root.append(sc, h('div',{class:'row'}, sEl, ear), fixRow, h('div',{class:'row'}, up, down));
+  }};
+}
+
+/* =====================================================================
+   BÖLÜM 9 — SAYI TRENİ
+   ===================================================================== */
+function makeL9(){ return [gapQ(), gapQ(), gapQ(), moreQ(), moreQ(), oneMoreQ(), oneMoreQ()]; }
+function gapQ(){
+  const start = rand(1,6), seq = [0,1,2,3,4].map(k => start+k), gi = rand(1,3), ans = seq[gi];
+  const opts = shuffle([ans, ...shuffle([1,2,3,4,5,6,7,8,9,10].filter(x => x !== ans)).slice(0,2)]);
+  return { render(root, ctx){
+    const upTo = seq.slice(0,gi).map(x => NUM[x]).join(', ');
+    ctx.prompt = () => ['Sayı treni! Bir vagonda sayı eksik.', `${upTo}, ve sonra?`, 'Eksik sayıyı vagona koy.'];
+    const train = h('div',{class:'train ntrain'}, h('div',{class:'loco'},'🚂'));
+    const wag = seq.map((v,k) => {
+      const w = k===gi ? h('div',{class:'wagon','data-zone':'gap'}) : h('div',{class:'wagon full'}, String(v));
+      if (k !== gi) w.addEventListener('click', () => speak(NUM[v]));
+      train.append(w); return w;
+    });
+    const pool = h('div',{class:'row'});
+    function tryN(v, c){
+      if (ctx.busy) return;
+      if (v === ans){
+        c.remove(); wag[gi].textContent = v; wag[gi].classList.add('full','pp'); flash(wag[gi],'appear'); train.classList.add('go');
+        ctx.win([seq.map(x => NUM[x]).join(', ')]);
+      } else { flash(c,'wiggle'); ctx.oops([`Bu ${NUM[v]}.`], ['Birlikte sayalım.', `${upTo}, ve sonra?`]); flash(pool.querySelector(`[data-v="${ans}"]`),'hint'); }
+    }
+    opts.forEach(v => {
+      const c = h('div',{class:'ncard',role:'button','data-v':v}, String(v));
+      dragTap(c, { onTap: () => tryN(v,c), onDrop: z => { if (z && z.dataset.zone === 'gap') tryN(v,c); } });
+      pool.append(c);
+    });
+    root.append(train, pool);
+  }};
+}
+function moreQ(){
+  let a, b; do { a = rand(1,10); b = rand(1,10); } while (Math.abs(a-b) < 2);
+  return { render(root, ctx){
+    ctx.prompt = () => ['Hangi sepette daha çok nane var? O sepete dokun.'];
+    const counts = [a,b], max = Math.max(a,b), min = Math.min(a,b);
+    const labels = counts.map(() => h('div',{class:'bnum'}));
+    const bs = counts.map((n,k) => {
+      const bk = h('button',{class:'basket2','aria-label':'Sepet'}, h('div',{class:'bl'}, '🌿'.repeat(n)), h('div',{class:'bi'},'🧺'));
+      bk.addEventListener('click', () => {
+        if (ctx.busy) return;
+        if (n === max){
+          bk.classList.add('good');
+          labels.forEach((l,j) => { l.textContent = counts[j]; flash(l,'appear'); });
+          ctx.win([`${NUM[max]} nane daha çok.`, `${NUM[min]} nane daha az.`]);
+        } else { flash(bk,'wiggle'); ctx.oops([], ['İki sepete de iyi bak.']); flash(bs[1-k],'hint'); }
+      });
+      return bk;
+    });
+    root.append(h('div',{class:'baskets'}, bs.map((bk,k) => h('div',{style:'display:flex;flex-direction:column;align-items:center;gap:8px'}, bk, labels[k]))));
+  }};
+}
+function oneMoreQ(){
+  const n = rand(1,9);
+  return { render(root, ctx){
+    let phase = 0;
+    ctx.prompt = () => phase === 0
+      ? [`Burada ${NUM[n]} nane var.`, 'Bir nane daha gelsin mi? Artı düğmesine dokun.']
+      : ['Bir nane daha geldi. Şimdi kaç nane var?'];
+    const counter = leafCounter(n);
+    const digit = h('div',{class:'ndigit'}, String(n));
+    digit.addEventListener('click', () => phase === 0 && speak(NUM[n]));
+    const plus = h('button',{class:'bigbtn','aria-label':'Bir nane ekle'},'➕🌿');
+    const {pad, btns} = numPad((i, b) => {
+      if (ctx.busy) return;
+      if (i === n+1){ b.classList.add('good'); digit.textContent = n+1; flash(digit,'appear'); ctx.win([`${NUM[n]}, bir fazlası ${NUM[n+1]}!`]); }
+      else { flash(b,'wiggle'); ctx.oops([NUM[i]+'.'], ['Yapraklara dokunup sayalım.']); flash(btns[n],'hint'); }
+    });
+    pad.classList.add('hidden');
+    plus.addEventListener('click', () => {
+      if (phase) return;
+      phase = 1; const l = counter.add(); flash(l,'appear'); sfx('step');
+      digit.textContent = '?'; plus.classList.add('hidden'); pad.classList.remove('hidden');
+      ctx.say(ctx.prompt());
+    });
+    root.append(h('div',{class:'leaves'}, counter.el), digit, plus, pad);
+  }};
+}
+
+/* =====================================================================
+   BÖLÜM 10 — KULAK YAZISI VE BÜYÜK FİNAL
+   ===================================================================== */
+function makeL10(){
+  const dict = [...shuffle(['anne','nane','nene','ana','annene']).slice(0,3), 'An ana.', 'Nene nane an.', 'Ana 3 nane.'].map(dictQ);
+  const fin = shuffle([
+    pick(makeL1()), pick(makeL2()), pick(makeL3()), pick(makeL4().slice(0,6)), pick(makeL5()),
+    memoryQ(3,0), pick(makeL7()), pick(makeL8()), pick(makeL9()), pick([...makeL7(), ...makeL8()])
+  ]);
+  fin[0].pre = 'Şimdi büyük final! Önceki bölümlerden karışık on soru geliyor.';
+  const sp = speedQ(); sp.pre = 'Final bitti! Şimdi hızlı okuma zamanı.';
+  return [...dict, ...fin, sp];
+}
+function dictQ(target){
+  return { render(root, ctx){
+    const isS = target.includes(' ');
+    ctx.prompt = () => isS
+      ? ['Kulak yazısı! Cümleyi dinle ve yaz.', target, 'Büyük harfe, sayıya ve sondaki noktaya dikkat et.']
+      : ['Kulak yazısı! Kelimeyi dinle. Harflere dokunarak sırayla yaz.', target];
+    const chars = [], dict = h('div',{class:'dict'});
+    target.split(' ').forEach(tok => {
+      const g = h('div',{class:'dw'});
+      [...tok].forEach(ch => { const s = h('div',{class:'ds'}); chars.push({ch, s, v:null}); g.append(s); });
+      dict.append(g);
+    });
+    const answer = h('div',{class:'answer row hidden'});
+    const cursor = () => chars.findIndex(c => c.v === null);
+    const paint = () => { const k = cursor(); chars.forEach((c,i) => {
+      c.s.textContent = ''; if (c.v !== null) c.s.append(T(c.v));
+      c.s.classList.toggle('full', c.v !== null); c.s.classList.toggle('cur', i === k); }); };
+    function press(key){
+      if (ctx.busy) return;
+      const k = cursor(); if (k < 0) return;
+      chars[k].v = key; chars[k].s.classList.remove('bad'); sfx('tap'); paint(); speak(key);
+      if (cursor() < 0) check();
+    }
+    function back(){
+      if (ctx.busy) return;
+      for (let i=chars.length-1;i>=0;i--) if (chars[i].v !== null){ chars[i].v = null; chars[i].s.classList.remove('bad'); break; }
+      sfx('tap'); paint();
+    }
+    function check(){
+      const wrong = chars.filter(c => c.v !== c.ch);
+      answer.innerHTML = ''; answer.append(h('span',{style:'font-size:44px'},'👀'), sentenceEl(target)); answer.classList.remove('hidden'); flash(answer,'appear');
+      if (!wrong.length){ chars.forEach(c => c.s.classList.add('ok')); ctx.win([target, 'Doğru yazdın!']); return; }
+      wrong.forEach(c => c.s.classList.add('bad'));
+      ctx.oops(['Doğrusu böyle:', target], ['Sarı kutuları düzeltelim.']);
+      setTimeout(() => { if (!ctx.alive()) return; wrong.forEach(c => c.v = null); paint(); }, 1800);
+    }
+    const key = k => { const b = h('button',{class:'key'+(/[ANE]/.test(k)?' kcap':'')}, T(k)); b.addEventListener('click', () => press(k)); return b; };
+    const del = h('button',{class:'key','aria-label':'Sil'},'⌫'); del.addEventListener('click', back);
+    const kb = h('div',{class:'kb'});
+    if (isS) [['A','N','E'],['a','n','e'],['1','2','3','4','5'],['.','?']].forEach((r,i,arr) => kb.append(h('div',{class:'row'}, r.map(key), i===arr.length-1 ? del : null)));
+    else kb.append(h('div',{class:'row'}, ['a','n','e'].map(key), del));
+    const ear = h('button',{class:'iconbtn ear','aria-label':'Dinle'},'👂'); ear.addEventListener('click', () => speak(target));
+    paint();
+    root.append(ear, dict, answer, kb);
+  }};
+}
+
 function speedQ(){
   return { render(root, ctx){
     ctx.prompt = () => ['Hızlı okuma! Cümle ekranda görünecek. Önce sen oku. Sonra ben okuyacağım, sen kontrol et. Başlamak için oynat düğmesine dokun.'];
