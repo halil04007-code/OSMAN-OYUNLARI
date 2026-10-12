@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#cdeed8">
 <title>Nane 🌿</title>
 <!-- Andika: internet varsa yüklenir; yoksa yedek yazı tipleri kullanılır. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap" media="print" onload="this.media='all'">
 <style>
 :root{
   --sky:#dff3ff; --grass:#d6f2de; --cream:#fffbef; --ink:#2f4a3a; --soft:#6b8a76;
@@ -94,8 +94,8 @@ button.wcard{touch-action:manipulation}
 
 /* ---------- ana menü: bahçe yolu ---------- */
 .mtitle{font-size:clamp(48px,12vw,80px);font-weight:700;color:var(--leaf-d);text-shadow:0 4px 0 #fff;text-align:center}
-.garden{position:relative;width:min(100%,460px);aspect-ratio:1/2;margin:0 auto;flex-shrink:0}
-.garden svg{position:absolute;inset:0;width:100%;height:100%}
+.garden{position:relative;width:min(100%,460px);height:calc(min(100vw - 32px,460px) * 2);margin:0 auto 48px;flex-shrink:0}
+.garden svg{position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100%}
 .lvl{
   position:absolute;width:clamp(80px,22vw,108px);height:clamp(80px,22vw,108px);transform:translate(-50%,-50%);
   border-radius:8% 70% 8% 70%;background:linear-gradient(135deg,#8fe0ad,var(--leaf));
@@ -118,7 +118,7 @@ button.wcard{touch-action:manipulation}
 /* ---------- 1: balonlar ---------- */
 .sky{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 14px;width:100%;max-width:560px;padding-top:10px}
 .balloon{
-  position:relative;justify-self:center;width:clamp(86px,25vw,120px);aspect-ratio:5/6;border-radius:50% 50% 48% 48%;
+  position:relative;justify-self:center;width:clamp(86px,25vw,120px);height:clamp(103px,30vw,144px);border-radius:50% 50% 48% 48%;
   background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.75) 0 10%,transparent 11%),var(--c);
   box-shadow:inset -8px -10px 0 rgba(0,0,0,.07),0 8px 16px rgba(0,0,0,.08);
   font-size:clamp(44px,12vw,62px);font-weight:700;display:grid;place-items:center;
@@ -141,9 +141,9 @@ button.wcard{touch-action:manipulation}
 .step.empty span{visibility:hidden}
 
 /* ---------- 3: resim-kelime ---------- */
-.picbig{width:min(52vw,220px);aspect-ratio:1;border-radius:50%;background:var(--cream);display:grid;place-items:center;
+.picbig{width:min(52vw,220px);height:min(52vw,220px);border-radius:50%;background:var(--cream);display:grid;place-items:center;
   font-size:min(30vw,130px);box-shadow:var(--shadow)}
-.piccard{width:clamp(96px,27vw,150px);aspect-ratio:1;border-radius:26px;background:var(--card);font-size:clamp(56px,16vw,90px);
+.piccard{width:clamp(96px,27vw,150px);height:clamp(96px,27vw,150px);border-radius:26px;background:var(--card);font-size:clamp(56px,16vw,90px);
   display:grid;place-items:center;box-shadow:var(--shadow)}
 .cmp{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
 .cmpcol{display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--cream);padding:16px 20px;border-radius:26px;box-shadow:var(--shadow)}
@@ -203,10 +203,10 @@ button.wcard{touch-action:manipulation}
 
 /* ---------- 6: hafıza kartları ---------- */
 .mgrid{display:grid;gap:12px;width:min(94vw,520px)}
-.mcard{position:relative;display:block;width:100%;aspect-ratio:4/5;min-height:64px;perspective:700px}
-.mcard .in{position:absolute;inset:0;transition:transform .45s;transform-style:preserve-3d}
+.mcard{position:relative;display:block;width:100%;aspect-ratio:4/5;min-height:96px;perspective:700px}
+.mcard .in{position:absolute;top:0;right:0;bottom:0;left:0;transition:transform .45s;transform-style:preserve-3d}
 .mcard.open .in{transform:rotateY(180deg)}
-.mcard .f,.mcard .b{position:absolute;inset:0;border-radius:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center;box-shadow:var(--shadow)}
+.mcard .f,.mcard .b{position:absolute;top:0;right:0;bottom:0;left:0;border-radius:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center;box-shadow:var(--shadow)}
 .mcard .b{background:linear-gradient(135deg,#8fe0ad,var(--leaf));font-size:clamp(30px,8vw,44px)}
 .mcard .f{background:#fff;transform:rotateY(180deg);font-weight:700;font-size:clamp(28px,7.5vw,42px)}
 .mcard .f.long{font-size:clamp(18px,5vw,30px)}
@@ -260,7 +260,7 @@ button.wcard{touch-action:manipulation}
 .answer .sentence{box-shadow:0 0 0 5px #8fe0ad,var(--shadow)}
 
 /* ---------- kutlama ---------- */
-#overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(223,243,255,.85);overflow:hidden}
+#overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(223,243,255,.85);overflow:hidden}
 #overlay.show{display:flex}
 .confetti{position:absolute;top:0;font-size:34px;animation:fall linear forwards;pointer-events:none}
 .celebrate{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:20px;background:var(--cream);
@@ -372,7 +372,7 @@ function flash(el, cls){ if(!el) return; el.classList.remove(cls); void el.offse
 /* ---------- ses: konuşma ---------- */
 const NUM = ['sıfır','bir','iki','üç','dört','beş','altı','yedi','sekiz','dokuz','on'];
 const LS = {a:'a',A:'a',n:'nı',N:'nı',e:'e',E:'e','.':'nokta','?':'soru işareti'};
-const spk = t => { t=String(t); if (LS[t]) return LS[t]; return t.replace(/\d+/g, d => NUM[+d] ?? d); };
+const spk = t => { t=String(t); if (LS[t]) return LS[t]; return t.replace(/\d+/g, d => (NUM[+d] != null ? NUM[+d] : d)); };
 const PRAISE = ['Aferin!','Harika!','Süpersin!','Çok güzel!','Bravo!','Doğru!'];
 const GENTLE = ['Bir daha deneyelim.','Hadi bir daha bakalım.','Olsun, bir daha deneyelim.'];
 const hasTTS = 'speechSynthesis' in window;
@@ -830,7 +830,7 @@ function countQ(n){
       const l = h('button',{class:'cleaf',style:`transform:rotate(${rand(-25,25)}deg)`},'🌿');
       l.addEventListener('click', () => {
         if (l.classList.contains('counted')){
-          if (c === n){ leaves.forEach(x => { x.classList.remove('counted'); x.querySelector('.cn')?.remove(); }); c = 0; speak('Baştan sayalım.'); }
+          if (c === n){ leaves.forEach(x => { x.classList.remove('counted'); const cn = x.querySelector('.cn'); if (cn) cn.remove(); }); c = 0; speak('Baştan sayalım.'); }
           else speak(NUM[+l.dataset.n]);
           return;
         }
@@ -1017,7 +1017,7 @@ function punctQ(sent){
 /* ---------- ortak: dokununca sayılan yapraklar ve rakam düğmeleri ---------- */
 function leafCounter(n){
   const el = h('div',{class:'tleaves'}), leaves = []; let c = 0;
-  const reset = () => { leaves.forEach(l => { l.classList.remove('counted'); l.querySelector('.cn')?.remove(); }); c = 0; };
+  const reset = () => { leaves.forEach(l => { l.classList.remove('counted'); const cn = l.querySelector('.cn'); if (cn) cn.remove(); }); c = 0; };
   const add = () => {
     const l = h('span',{class:'tleaf',role:'button'},'🌿');
     l.addEventListener('click', e => {
