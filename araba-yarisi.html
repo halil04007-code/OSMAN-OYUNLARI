@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#120a24">
+<title>Gece Yarışı</title>
+<style>
+/* Tam ekran canvas, üstte göstergeler. Tema: gece moru + turuncu şerit + turkuaz oyuncu + pembe rakipler. */
+:root{
+  --gece:#0b0618; --yol:#2a1650; --turuncu:#ff8a1f; --turkuaz:#2ee6d6; --pembe:#ff4fa3;
+  --metin:#f3ecff; --soluk:#b9a8dc; --panel:rgba(18,10,36,.78); --cizgi:rgba(255,255,255,.14);
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--gece);color:var(--metin);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;
+  touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+/* Göstergeler */
+.hud{position:fixed;top:calc(10px + env(safe-area-inset-top));left:12px;right:12px;display:flex;
+  justify-content:space-between;gap:8px;pointer-events:none;z-index:5}
+.hud .kutu{background:var(--panel);border:1px solid var(--cizgi);border-radius:10px;padding:6px 12px;min-width:84px}
+.hud small{display:block;font-size:11px;color:var(--soluk);letter-spacing:.06em;text-transform:uppercase}
+.hud b{font-size:20px;font-variant-numeric:tabular-nums}
+.hud .sag{text-align:right}
+
+/* Başlangıç ve bitiş ekranları */
+.ekran{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;padding:16px;
+  background:radial-gradient(ellipse at 50% 30%,rgba(90,40,160,.55),rgba(8,4,18,.93) 70%)}
+.ekran .ic{max-width:420px;width:100%;text-align:center;background:var(--panel);border:1px solid var(--cizgi);
+  border-radius:16px;padding:28px 22px}
+.ekran h1{margin:0 0 6px;font-size:clamp(32px,9vw,46px);line-height:1.05;letter-spacing:.02em;
+  color:var(--turkuaz);text-shadow:0 0 18px rgba(46,230,214,.55)}
+.ekran h1.kaza{color:var(--pembe);text-shadow:0 0 18px rgba(255,79,163,.6)}
+.ekran p{margin:8px 0;color:var(--soluk);line-height:1.5}
+.ekran .skorlar{display:flex;justify-content:center;gap:12px;margin:18px 0 6px}
+.ekran .skorlar div{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--cizgi);border-radius:10px;padding:10px}
+.ekran .skorlar small{display:block;font-size:12px;color:var(--soluk)}
+.ekran .skorlar b{font-size:26px;font-variant-numeric:tabular-nums}
+.ekran .yeni{color:var(--turuncu);font-weight:700}
+.btn{margin-top:16px;background:var(--turuncu);color:#1a0b00;border:0;border-radius:12px;padding:14px 30px;
+  font-size:19px;font-weight:800;cursor:pointer;box-shadow:0 0 22px rgba(255,138,31,.45);font-family:inherit}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:3px solid var(--turkuaz);outline-offset:3px}
+.ipucu{font-size:14px}
+.ipucu kbd{display:inline-block;border:1px solid var(--cizgi);border-bottom-width:2px;border-radius:5px;
+  padding:1px 6px;margin:0 1px;font-family:inherit;font-size:13px;color:var(--metin);background:rgba(255,255,255,.06)}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="Yarış pisti"></canvas>
+
+<div class="hud" id="hud" hidden>
+  <div class="kutu"><small>Skor</small><b id="skor">0</b></div>
+  <div class="kutu sag"><small>Hız</small><b id="hiz">0</b> <small style="display:inline">km/s</small></div>
+</div>
+
+<div class="ekran" id="baslangic">
+  <div class="ic">
+    <h1>Gece Yarışı</h1>
+    <p>Şerit değiştir, pembe arabalardan kaç. Ne kadar uzağa gidersen skorun o kadar yüksek!</p>
+    <p class="ipucu">Bilgisayarda <kbd>←</kbd><kbd>→</kbd> veya <kbd>A</kbd><kbd>D</kbd><br>Telefonda ekranın sol ya da sağ yarısına dokun</p>
+    <p>En yüksek skor: <b id="rekorBas">0</b></p>
+    <button class="btn" id="basla">Yarışa başla</button>
+  </div>
+</div>
+
+<div class="ekran" id="bitis" hidden>
+  <div class="ic">
+    <h1 class="kaza">Kaza yaptın!</h1>
+    <div class="skorlar">
+      <div><small>Skorun</small><b id="sonSkor">0</b></div>
+      <div><small>En yüksek</small><b id="rekorSon">0</b></div>
+    </div>
+    <p class="yeni" id="yeniRekor" hidden>Yeni rekor!</p>
+    <button class="btn" id="tekrar">Tekrar yarış</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('c');
+  const ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const REKOR_ANAHTAR = 'geceYarisiRekor';
+
+  let W = 0, H = 0, dpr = 1;
+  let yolX = 0, yolG = 0, seritG = 0, arabaG = 0, arabaY = 0;
+
+  function boyutla() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    yolG = Math.min(W * 0.92, 440, H * 0.62);
+    yolX = (W - yolG) / 2;
+    seritG = yolG / 3;
+    arabaG = seritG * 0.56;
+    arabaY = H - arabaG * 1.8 - Math.max(24, H * 0.06);
+    // Şerit genişliği değişince oyuncunun konumu da yeni şeride otursun
+    oyuncu.x = seritMerkez(oyuncu.serit);
+  }
+
+  const seritMerkez = s => yolX + seritG * (s + 0.5);
+
+  function rekorOku() {
+    try { return parseInt(localStorage.getItem(REKOR_ANAHTAR), 10) || 0; } catch (e) { return 0; }
+  }
+  function rekorYaz(v) {
+    try { localStorage.setItem(REKOR_ANAHTAR, String(v)); } catch (e) {}
+  }
+
+  // Oyun durumu. Hızlar "şerit genişliği / saniye" cinsinden, böylece her ekranda aynı his.
+  const oyuncu = { serit: 1, x: 0 };
+  let durum = 'baslangic';   // baslangic | oyun | bitti
+  let rakipler = [], kivilcim = [];
+  let hiz = 0, mesafe = 0, cizgiKaydir = 0, sonrakiSira = 0, oncekiSira = null;
+  let sarsinti = 0, rekor = rekorOku();
+  const BAS_HIZ = 5, MAKS_HIZ = 16;
+
+  // Arka plan yıldızları ve yol kenarı lambaları
+  const yildizlar = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.3 + 0.3, t: Math.random() * 6 }));
+
+  function sifirla() {
+    oyuncu.serit = 1; oyuncu.x = seritMerkez(1);
+    rakipler = []; kivilcim = [];
+    hiz = BAS_HIZ; mesafe = 0; sonrakiSira = 1.2; oncekiSira = null; sarsinti = 0;
+  }
+
+  function seritDegistir(yon) {
+    if (durum !== 'oyun') return;
+    oyuncu.serit = Math.max(0, Math.min(2, oyuncu.serit + yon));
+  }
+
+  // Yeni rakip sırası: asla üç şeridin hepsini kapatma; önceki sıra iki şerit kapattıysa
+  // geçilebilir bir yol bırakmak için bu sefer tek araba gönder.
+  function siraUret() {
+    const ikili = Math.random() < Math.min(0.15 + mesafe / 4000, 0.45) && !(oncekiSira && oncekiSira.length === 2);
+    const seritler = [0, 1, 2].sort(() => Math.random() - 0.5).slice(0, ikili ? 2 : 1);
+    const renkler = ['#ff4fa3', '#ff6fb8', '#e8388f'];
+    for (const s of seritler) {
+      rakipler.push({ serit: s, y: -arabaG * 2.2, renk: renkler[(Math.random() * renkler.length) | 0] });
+    }
+    oncekiSira = seritler;
+  }
+
+  function guncelle(dt) {
+    if (sarsinti > 0) sarsinti = Math.max(0, sarsinti - dt * 2.5);
+    for (const k of kivilcim) { k.x += k.vx * dt; k.y += k.vy * dt; k.vy += 300 * dt; k.o -= dt * 1.4; }
+    kivilcim = kivilcim.filter(k => k.o > 0);
+    if (durum !== 'oyun') return;
+
+    hiz = Math.min(MAKS_HIZ, hiz + dt * 0.12);
+    const pikselHiz = hiz * seritG;
+    mesafe += hiz * dt * 4;
+    cizgiKaydir = (cizgiKaydir + pikselHiz * dt) % (seritG * 1.6);
+
+    // Oyuncu hedef şeride yumuşakça kayar
+    const hedef = seritMerkez(oyuncu.serit);
+    oyuncu.x += (hedef - oyuncu.x) * Math.min(1, dt * 16);
+
+    // Rakipler oyuncudan yavaş gider, bu yüzden aşağı doğru akarlar
+    const rakipHiz = pikselHiz * 0.72;
+    for (const r of rakipler) r.y += rakipHiz * dt;
+    rakipler = rakipler.filter(r => r.y < H + arabaG * 2);
+
+    sonrakiSira -= dt;
+    if (sonrakiSira <= 0) {
+      siraUret();
+      // Sıralar arası mesafe en az ~3 araba boyu kalsın ki şerit değiştirmeye vakit olsun
+      const bosluk = arabaG * 1.8 * (3.2 + Math.random() * 2.2 - Math.min(1.4, mesafe / 3000));
+      sonrakiSira = bosluk / rakipHiz;
+    }
+
+    // Çarpışma (kutular hafif küçültülmüş, köşeden sürtünmeler affedilir)
+    const ag = arabaG * 0.84, ay = arabaG * 1.8 * 0.88;
+    for (const r of rakipler) {
+      const rx = seritMerkez(r.serit);
+      if (Math.abs(rx - oyuncu.x) < ag && Math.abs(r.y - arabaY) < ay) { kaza(rx, r.y); break; }
+    }
+
+    $('skor').textContent = Math.floor(mesafe);
+    $('hiz').textContent = Math.round(60 + hiz * 14);
+  }
+
+  function kaza(rx, ry) {
+    durum = 'bitti';
+    sarsinti = 1;
+    const cx = (rx + oyuncu.x) / 2, cy = (ry + arabaY) / 2;
+    for (let i = 0; i < 40; i++) {
+      const a = Math.random() * Math.PI * 2, v = 80 + Math.random() * 260;
+      kivilcim.push({ x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 80, o: 1, r: 1.5 + Math.random() * 2.5,
+        renk: Math.random() < 0.5 ? '#ff8a1f' : (Math.random() < 0.5 ? '#ff4fa3' : '#2ee6d6') });
+    }
+    const skor = Math.floor(mesafe);
+    const yeni = skor > rekor;
+    if (yeni) { rekor = skor; rekorYaz(rekor); }
+    $('sonSkor').textContent = skor;
+    $('rekorSon').textContent = rekor;
+    $('yeniRekor').hidden = !yeni;
+    setTimeout(() => {
+      if (durum !== 'bitti') return;
+      $('bitis').hidden = false;
+      $('tekrar').focus({ preventScroll: true });
+    }, 700);
+  }
+
+  // ---------- Çizim ----------
+  function yuvarlakDikdortgen(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  // Araba yukarı bakar. oyuncu=true ise ön farlar ışık hüzmesi verir; rakiplerde arka stoplar parlar.
+  function arabaCiz(cx, cy, renk, oyuncuMu) {
+    const w = arabaG, h = arabaG * 1.8, x = cx - w / 2, y = cy - h / 2;
+
+    if (oyuncuMu) {
+      const g = ctx.createLinearGradient(0, y, 0, y - h * 1.6);
+      g.addColorStop(0, 'rgba(255,240,200,.32)');
+      g.addColorStop(1, 'rgba(255,240,200,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(x + w * 0.12, y + 2); ctx.lineTo(x - w * 0.35, y - h * 1.6);
+      ctx.lineTo(x + w * 1.35, y - h * 1.6); ctx.lineTo(x + w * 0.88, y + 2);
+      ctx.fill();
+    }
+
+    // Gölge
+    ctx.fillStyle = 'rgba(0,0,0,.4)';
+    yuvarlakDikdortgen(x + 3, y + 5, w, h, w * 0.28); ctx.fill();
+
+    // Tekerlekler
+    ctx.fillStyle = '#0d0a14';
+    const tw = w * 0.16, th = h * 0.2;
+    for (const [tx, ty] of [[x - tw * 0.45, y + h * 0.14], [x + w - tw * 0.55, y + h * 0.14], [x - tw * 0.45, y + h * 0.66], [x + w - tw * 0.55, y + h * 0.66]]) {
+      yuvarlakDikdortgen(tx, ty, tw, th, tw * 0.35); ctx.fill();
+    }
+
+    // Gövde (neon parıltılı)
+    ctx.save();
+    ctx.shadowColor = renk; ctx.shadowBlur = 16;
+    ctx.fillStyle = renk;
+    yuvarlakDikdortgen(x, y, w, h, w * 0.28); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,.14)';
+    yuvarlakDikdortgen(x + w * 0.3, y + h * 0.04, w * 0.4, h * 0.92, w * 0.15); ctx.fill();
+
+    // Ön ve arka camlar, tavan
+    ctx.fillStyle = 'rgba(10,8,30,.85)';
+    yuvarlakDikdortgen(x + w * 0.14, y + h * 0.24, w * 0.72, h * 0.17, w * 0.1); ctx.fill();
+    yuvarlakDikdortgen(x + w * 0.17, y + h * 0.68, w * 0.66, h * 0.12, w * 0.08); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,.18)';
+    yuvarlakDikdortgen(x + w * 0.16, y + h * 0.43, w * 0.68, h * 0.23, w * 0.08); ctx.fill();
+
+    // Farlar ve stoplar
+    ctx.save();
+    ctx.fillStyle = '#fff6d8'; ctx.shadowColor = '#fff6d8'; ctx.shadowBlur = oyuncuMu ? 12 : 4;
+    ctx.fillRect(x + w * 0.1, y + h * 0.02, w * 0.22, h * 0.035);
+    ctx.fillRect(x + w * 0.68, y + h * 0.02, w * 0.22, h * 0.035);
+    ctx.fillStyle = '#ff2b4a'; ctx.shadowColor = '#ff2b4a'; ctx.shadowBlur = oyuncuMu ? 4 : 12;
+    ctx.fillRect(x + w * 0.08, y + h * 0.945, w * 0.24, h * 0.035);
+    ctx.fillRect(x + w * 0.68, y + h * 0.945, w * 0.24, h * 0.035);
+    ctx.restore();
+  }
+
+  function ciz(zaman) {
+    ctx.save();
+    if (sarsinti > 0) ctx.translate((Math.random() - 0.5) * 14 * sarsinti, (Math.random() - 0.5) * 14 * sarsinti);
+
+    // Gökyüzü / kenarlar
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#120826'); bg.addColorStop(1, '#07030f');
+    ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, H + 40);
+    for (const y of yildizlar) {
+      ctx.globalAlpha = 0.35 + 0.35 * Math.sin(zaman / 700 + y.t);
+      ctx.fillStyle = '#d9ccff';
+      ctx.beginPath(); ctx.arc(y.x * W, y.y * H, y.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Yol
+    const yg = ctx.createLinearGradient(yolX, 0, yolX + yolG, 0);
+    yg.addColorStop(0, '#1f0f3d'); yg.addColorStop(0.5, '#2e1858'); yg.addColorStop(1, '#1f0f3d');
+    ctx.fillStyle = yg; ctx.fillRect(yolX, -20, yolG, H + 40);
+
+    // Kenar bantları
+    ctx.save();
+    ctx.shadowColor = '#ff8a1f'; ctx.shadowBlur = 12; ctx.fillStyle = '#ff8a1f';
+    ctx.fillRect(yolX - 5, -20, 5, H + 40);
+    ctx.fillRect(yolX + yolG, -20, 5, H + 40);
+    ctx.restore();
+
+    // Kesik şerit çizgileri
+    const boy = seritG * 0.8, aralik = seritG * 1.6;
+    ctx.save();
+    ctx.fillStyle = '#ff9a3c'; ctx.shadowColor = '#ff8a1f'; ctx.shadowBlur = 10;
+    for (let s = 1; s < 3; s++) {
+      const lx = yolX + seritG * s - 3;
+      for (let yy = -aralik + cizgiKaydir; yy < H + aralik; yy += aralik) ctx.fillRect(lx, yy, 6, boy);
+    }
+    ctx.restore();
+
+    // Yol kenarı lambaları (yolla birlikte akar)
+    const lambaAralik = seritG * 4.8;
+    ctx.save();
+    for (let yy = -lambaAralik + (mesafeKaydir % lambaAralik); yy < H + lambaAralik; yy += lambaAralik) {
+      for (const lx of [yolX - 16, yolX + yolG + 16]) {
+        if (lx < 4 || lx > W - 4) continue;
+        const gl = ctx.createRadialGradient(lx, yy, 0, lx, yy, 34);
+        gl.addColorStop(0, 'rgba(255,160,80,.55)'); gl.addColorStop(1, 'rgba(255,160,80,0)');
+        ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(lx, yy, 34, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffd2a0'; ctx.beginPath(); ctx.arc(lx, yy, 3.5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    // Arabalar
+    for (const r of rakipler) arabaCiz(seritMerkez(r.serit), r.y, r.renk, false);
+    arabaCiz(oyuncu.x, arabaY, '#2ee6d6', true);
+
+    // Kıvılcımlar
+    for (const k of kivilcim) {
+      ctx.globalAlpha = Math.max(0, k.o);
+      ctx.fillStyle = k.renk;
+      ctx.beginPath(); ctx.arc(k.x, k.y, k.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
+  }
+
+  // Lambaların kayması şerit çizgilerinden bağımsız, sürekli artan bir sayaçla
+  let mesafeKaydir = 0;
+
+  let onceki = performance.now();
+  function dongu(t) {
+    const dt = Math.min(0.05, (t - onceki) / 1000);
+    onceki = t;
+    if (durum === 'oyun') mesafeKaydir += hiz * seritG * dt;
+    else if (durum === 'baslangic') { mesafeKaydir += 3 * seritG * dt; cizgiKaydir = (cizgiKaydir + 3 * seritG * dt) % (seritG * 1.6); }
+    guncelle(dt);
+    ciz(t);
+    requestAnimationFrame(dongu);
+  }
+
+  function basla() {
+    sifirla();
+    durum = 'oyun';
+    $('baslangic').hidden = true;
+    $('bitis').hidden = true;
+    $('hud').hidden = false;
+  }
+
+  // ---------- Kontroller ----------
+  addEventListener('keydown', e => {
+    const k = e.key;
+    if (k === 'ArrowLeft' || k === 'a' || k === 'A') { seritDegistir(-1); e.preventDefault(); }
+    else if (k === 'ArrowRight' || k === 'd' || k === 'D') { seritDegistir(1); e.preventDefault(); }
+    else if ((k === 'Enter' || k === ' ') && durum !== 'oyun' && e.target.tagName !== 'BUTTON') {
+      // Kazadan hemen sonra yanlışlıkla yeniden başlamayı önlemek için bitiş ekranı görünür olmalı
+      if (durum === 'baslangic' || !$('bitis').hidden) { basla(); e.preventDefault(); }
+    }
+  });
+  cv.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    seritDegistir(e.clientX < W / 2 ? -1 : 1);
+  });
+  $('basla').addEventListener('click', basla);
+  $('tekrar').addEventListener('click', basla);
+
+  // Sekme gizlenince zaman sıçramasın
+  document.addEventListener('visibilitychange', () => { onceki = performance.now(); });
+  addEventListener('resize', boyutla);
+
+  $('rekorBas').textContent = rekor;
+  boyutla();
+  sifirla();
+  requestAnimationFrame(dongu);
+})();
+</script>
+</body>
+</html>
