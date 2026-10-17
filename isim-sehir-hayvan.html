@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>İsim Şehir Hayvan</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: linear-gradient(135deg, #4facfe, #8e54e9);
+    display: flex; justify-content: center; align-items: flex-start;
+    padding: 24px 16px; color: #222;
+  }
+  .kart {
+    background: #fff; width: 100%; max-width: 480px;
+    border-radius: 18px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.2);
+  }
+  h1 { margin: 0 0 4px; text-align: center; color: #5b3cc4; }
+  .alt { text-align: center; color: #777; margin: 0 0 20px; }
+  .ust { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .harf {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: #5b3cc4; color: #fff; font-size: 52px; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .bilgi { text-align: right; font-size: 18px; }
+  .sure { font-size: 34px; font-weight: bold; color: #e74c3c; }
+  label { display: block; font-weight: bold; margin: 12px 0 4px; }
+  input {
+    width: 100%; padding: 12px; font-size: 18px;
+    border: 2px solid #ddd; border-radius: 10px; outline: none;
+  }
+  input:focus { border-color: #5b3cc4; }
+  input:disabled { background: #f4f4f4; }
+  button {
+    width: 100%; margin-top: 20px; padding: 14px; font-size: 20px; font-weight: bold;
+    border: none; border-radius: 10px; cursor: pointer; color: #fff; background: #27ae60;
+  }
+  button:hover { filter: brightness(1.1); }
+  button.dur { background: #e74c3c; }
+  .sonuc { margin-top: 16px; }
+  .satir { display: flex; justify-content: space-between; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; }
+  .dogru { background: #e8f8ef; }
+  .yanlis { background: #fdecea; }
+  .toplam { font-size: 20px; font-weight: bold; text-align: center; margin-top: 10px; }
+  .gizli { display: none; }
+</style>
+</head>
+<body>
+<div class="kart">
+  <h1>İsim Şehir Hayvan</h1>
+  <p class="alt">Harfle başlayan kelimeleri süre bitmeden yaz!</p>
+
+  <div class="ust">
+    <div class="harf" id="harf">?</div>
+    <div class="bilgi">
+      <div class="sure" id="sure">60</div>
+      <div>Tur: <b id="tur">0</b></div>
+      <div>Puan: <b id="puan">0</b></div>
+    </div>
+  </div>
+
+  <label for="isim">İsim</label>
+  <input id="isim" autocomplete="off" disabled>
+  <label for="sehir">Şehir</label>
+  <input id="sehir" autocomplete="off" disabled>
+  <label for="hayvan">Hayvan</label>
+  <input id="hayvan" autocomplete="off" disabled>
+  <label for="bitki">Bitki</label>
+  <input id="bitki" autocomplete="off" disabled>
+  <label for="esya">Eşya</label>
+  <input id="esya" autocomplete="off" disabled>
+
+  <button id="buton">Başla</button>
+
+  <div class="sonuc gizli" id="sonuc"></div>
+</div>
+
+<script>
+  const HARFLER = "ABCÇDEFGHIİKLMNOÖPRSŞTUÜVYZ".split("");
+  const ALANLAR = [
+    { id: "isim", ad: "İsim" },
+    { id: "sehir", ad: "Şehir" },
+    { id: "hayvan", ad: "Hayvan" },
+    { id: "bitki", ad: "Bitki" },
+    { id: "esya", ad: "Eşya" }
+  ];
+  const SURE = 60;
+
+  let harf = "", kalan = SURE, sayac = null, oynuyor = false;
+  let tur = 0, toplamPuan = 0;
+  let kullanilan = [];
+
+  const $ = id => document.getElementById(id);
+  const buyuk = s => s.trim().toLocaleUpperCase("tr");
+
+  function harfSec() {
+    let kalanlar = HARFLER.filter(h => !kullanilan.includes(h));
+    if (kalanlar.length === 0) { kullanilan = []; kalanlar = HARFLER; }
+    const h = kalanlar[Math.floor(Math.random() * kalanlar.length)];
+    kullanilan.push(h);
+    return h;
+  }
+
+  function basla() {
+    harf = harfSec();
+    tur++;
+    kalan = SURE;
+    oynuyor = true;
+    $("harf").textContent = harf;
+    $("tur").textContent = tur;
+    $("sure").textContent = kalan;
+    $("sonuc").classList.add("gizli");
+    ALANLAR.forEach(a => { const el = $(a.id); el.value = ""; el.disabled = false; });
+    $("isim").focus();
+    $("buton").textContent = "Dur!";
+    $("buton").classList.add("dur");
+
+    sayac = setInterval(() => {
+      kalan--;
+      $("sure").textContent = kalan;
+      if (kalan <= 0) bitir();
+    }, 1000);
+  }
+
+  function bitir() {
+    clearInterval(sayac);
+    oynuyor = false;
+    let turPuani = 0;
+    let html = "";
+
+    ALANLAR.forEach(a => {
+      const el = $(a.id);
+      el.disabled = true;
+      const kelime = el.value.trim();
+      const gecerli = kelime.length >= 2 && buyuk(kelime).startsWith(harf);
+      const p = gecerli ? 10 : 0;
+      turPuani += p;
+      html += `<div class="satir ${gecerli ? "dogru" : "yanlis"}">
+        <span><b>${a.ad}:</b> ${kelime ? kelime.replace(/</g, "&lt;") : "-"}</span>
+        <span>${p} puan</span></div>`;
+    });
+
+    // Süre bonusu: erken bitirene ekstra puan
+    const bonus = turPuani === 50 ? Math.floor(kalan / 2) : 0;
+    if (bonus) html += `<div class="satir dogru"><span><b>Hız bonusu</b></span><span>+${bonus}</span></div>`;
+    turPuani += bonus;
+    toplamPuan += turPuani;
+
+    html += `<div class="toplam">Bu tur: ${turPuani} puan</div>`;
+    $("sonuc").innerHTML = html;
+    $("sonuc").classList.remove("gizli");
+    $("puan").textContent = toplamPuan;
+    $("buton").textContent = "Yeni Tur";
+    $("buton").classList.remove("dur");
+  }
+
+  $("buton").addEventListener("click", () => oynuyor ? bitir() : basla());
+
+  // Enter ile bir sonraki kutuya geç
+  ALANLAR.forEach((a, i) => {
+    $(a.id).addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      if (i < ALANLAR.length - 1) $(ALANLAR[i + 1].id).focus();
+      else bitir();
+    });
+  });
+</script>
+</body>
+</html>
