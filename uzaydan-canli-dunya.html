@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<!--
+  UZAYDAN CANLI DÜNYA — ADRESLERİ NEREDEN DEĞİŞTİRİRİM?
+  ----------------------------------------------------
+  Bütün uydu adresleri aşağıdaki <script> bölümünün en başındaki "AYARLAR"
+  nesnesinde toplu durur. Bir kaynak çalışmayı bırakırsa yalnızca orayı düzeltin:
+
+  - AYARLAR.iss.youtubeKanal / youtubeVideo : ISS canlı yayını. Yayın kimliği
+      değişirse NASA'nın YouTube "Canlı" sekmesindeki videonun kimliğini
+      (watch?v= sonrasındaki 11 harf) youtubeVideo'ya yazın.
+  - AYARLAR.iss.konumAdresi                 : ISS'in anlık konumu (wheretheiss.at).
+  - AYARLAR.meteosat.wms ve katmanlar       : EUMETSAT EUMETView WMS adresi ve katman adları.
+  - AYARLAR.goes.cdn, dogu, bati            : NOAA STAR görüntü klasörü ve görevdeki uydular
+      (şu an GOES-19 Doğu, GOES-18 Batı; değişirse buradan güncelleyin).
+  - AYARLAR.himawari.slider / nict          : CIRA SLIDER ve yedek NICT adresleri.
+  - AYARLAR.epic.api / yedekApi / arsiv     : NASA EPIC listesi ve resim arşivi.
+  - AYARLAR.yenilemeDakika                  : Görüntülerin kaç dakikada bir yenileneceği (en az 10).
+
+  Dosya çift tıklanınca tarayıcıda açılır; kurulum gerekmez, internet gerekir.
+-->
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Uzaydan Canlı Dünya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* Düzen: görev kontrol masası. Üstte büyük sekme düğmeleri, ana ekranda uydu kartları + kapsama haritası,
+   her uydunun kendi tam ekran görüntü sayfası. Tek, koyu "uzay" görünümü (bilinçli olarak tek tema). */
+:root{
+  --uzay:#060912;        /* arka plan */
+  --panel:#0e1422;       /* kart zemini */
+  --panel2:#151d30;      /* düğme zemini */
+  --cizgi:#25304a;       /* kenarlık */
+  --yazi:#eaf0fa;        /* ana yazı */
+  --soluk:#97a6c0;       /* ikincil yazı */
+  --gunes:#ffb547;       /* vurgu: güneş ışığı */
+  --yesil:#3ddc84; --sari:#ffd23f; --kirmizi:#ff5c5c;
+  --c-iss:#ffb547; --c-met:#4cc9f0; --c-goesE:#90e06d; --c-goesW:#c792ea; --c-him:#ff8fab; --c-epic:#7aa2ff;
+  --f-baslik:"Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --f-govde:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-veri:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --r:14px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--uzay);
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, #ffffff99 50%, transparent 51%),
+    radial-gradient(1px 1px at 72% 8%, #ffffffaa 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 38% 62%, #ffffff77 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 44%, #ffffff88 50%, transparent 51%),
+    radial-gradient(1px 1px at 22% 84%, #ffffff66 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 58% 30%, #ffffff55 50%, transparent 51%),
+    radial-gradient(1px 1px at 95% 90%, #ffffff77 50%, transparent 51%),
+    radial-gradient(1200px 600px at 80% -10%, #12203f 0%, transparent 70%);
+  background-attachment:fixed;
+  color:var(--yazi);
+  font:17px/1.55 var(--f-govde);
+  min-height:100vh;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+img{max-width:100%}
+[hidden]{display:none!important}
+a{color:var(--gunes)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gunes);outline-offset:2px}
+.sarmal{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Üst bar */
+header.ust{position:sticky;top:0;z-index:1000;background:#060912e8;backdrop-filter:blur(8px);border-bottom:1px solid var(--cizgi)}
+.ust-ic{display:flex;align-items:center;gap:16px;padding-block:10px}
+.logo{display:flex;align-items:center;gap:10px;font:700 1.25rem/1 var(--f-baslik);letter-spacing:.02em;white-space:nowrap;cursor:pointer;background:none;border:0;padding:4px}
+.logo svg{flex:none}
+.saat{margin-left:auto;font:600 .95rem var(--f-veri);color:var(--soluk);white-space:nowrap}
+nav.sekmeler{display:flex;gap:8px;overflow-x:auto;padding-block:0 10px;scrollbar-width:thin}
+nav.sekmeler button{flex:none;display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px;border-radius:999px;border:1px solid var(--cizgi);background:var(--panel2);font:600 1rem var(--f-baslik);cursor:pointer}
+nav.sekmeler button[aria-current="page"]{background:var(--gunes);color:#1b1205;border-color:var(--gunes)}
+nav.sekmeler button[aria-current="page"] .nokta{box-shadow:0 0 0 2px #1b1205}
+
+/* Durum noktası */
+.nokta{display:inline-block;width:12px;height:12px;border-radius:50%;background:#55607a;flex:none}
+.nokta.yesil{background:var(--yesil);box-shadow:0 0 10px var(--yesil)}
+.nokta.sari{background:var(--sari)}
+.nokta.kirmizi{background:var(--kirmizi)}
+
+main{padding-block:20px 40px}
+h1,h2,h3{font-family:var(--f-baslik);text-wrap:balance;margin:0}
+h1{font-size:clamp(1.8rem,4.5vw,2.8rem);line-height:1.1}
+h2{font-size:clamp(1.3rem,3vw,1.75rem)}
+h3{font-size:1.15rem}
+.etiket{font:600 .78rem var(--f-veri);letter-spacing:.12em;text-transform:uppercase;color:var(--soluk)}
+.giris{display:grid;gap:8px;margin-bottom:20px}
+.giris p{margin:0;color:var(--soluk);max-width:65ch}
+
+/* Kartlar */
+.kartlar{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px}
+.kart{display:flex;flex-direction:column;text-align:left;background:var(--panel);border:1px solid var(--cizgi);border-radius:var(--r);overflow:hidden;cursor:pointer;padding:0;transition:transform .15s,border-color .15s}
+.kart:hover{transform:translateY(-3px);border-color:var(--renk,var(--gunes))}
+.kart-resim{position:relative;aspect-ratio:1/1;max-width:100%;background:#000;display:grid;place-items:center;overflow:hidden}
+.kart-resim img{width:100%;height:100%;object-fit:cover}
+.kart-resim .mini-harita{position:absolute;inset:0}
+.kart-resim .yukleniyor{position:absolute;color:var(--soluk);font-size:.95rem;padding:16px;text-align:center}
+.kart-alt{display:grid;gap:6px;padding:14px 16px 16px;border-top:3px solid var(--renk,var(--gunes))}
+.kart-alt h3{display:flex;align-items:center;gap:10px}
+.kart-alt .zaman{font:400 .88rem var(--f-veri);color:var(--soluk);min-height:2.6em}
+.rozet{position:absolute;top:10px;left:10px;font:700 .75rem var(--f-veri);letter-spacing:.08em;padding:4px 8px;border-radius:6px;background:#000c;border:1px solid #ffffff33}
+.rozet.canli{color:#fff;background:#d7263d}
+
+/* Bölüm başlıkları */
+.bolum{margin-top:36px;display:grid;gap:14px}
+.harita-kutu{height:min(62vh,520px);border-radius:var(--r);overflow:hidden;border:1px solid var(--cizgi);background:#0a1020}
+.lejant{display:flex;flex-wrap:wrap;gap:8px}
+.lejant button{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--cizgi);background:var(--panel2);cursor:pointer;font-size:.95rem}
+.lejant i{width:14px;height:14px;border-radius:4px;display:inline-block}
+
+/* Bilgi köşesi */
+.bilgi-izgara{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px}
+.bilgi{background:var(--panel);border:1px solid var(--cizgi);border-radius:var(--r);padding:18px;display:grid;gap:8px;align-content:start}
+.bilgi h3{color:var(--renk)}
+.bilgi p{margin:0;color:#cfd8e8}
+.mesafe{font:600 .9rem var(--f-veri);color:var(--renk)}
+
+/* Görüntü sayfası */
+.sayfa-ust{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px;margin-bottom:14px}
+.uyari-bant{background:#2a1d05;border:2px solid var(--gunes);color:var(--gunes);border-radius:var(--r);padding:14px 18px;font:700 clamp(1.1rem,3vw,1.5rem) var(--f-baslik);text-transform:uppercase;letter-spacing:.03em;margin-bottom:14px}
+.secenekler{display:flex;flex-wrap:wrap;gap:8px}
+.secenekler button,.dugme{min-height:48px;padding:0 16px;border-radius:12px;border:1px solid var(--cizgi);background:var(--panel2);cursor:pointer;font:600 .98rem var(--f-govde);display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--yazi)}
+.secenekler button[aria-pressed="true"]{border-color:var(--gunes);background:#3a2a0c;color:var(--gunes)}
+.dugme:hover,.secenekler button:hover{border-color:var(--soluk)}
+.dugme.ana{background:var(--gunes);color:#1b1205;border-color:var(--gunes)}
+
+.gorus{position:relative;background:#000;border:1px solid var(--cizgi);border-radius:var(--r);overflow:hidden;height:min(72vh,860px);touch-action:none;cursor:grab;user-select:none}
+.gorus:active{cursor:grabbing}
+.gorus:fullscreen{border-radius:0;height:100vh}
+.gorus .icerik{position:absolute;left:50%;top:50%;transform-origin:0 0;will-change:transform}
+.gorus .icerik img{display:block;max-width:none;-webkit-user-drag:none;pointer-events:none}
+.gorus .karo{display:grid;grid-template-columns:1fr 1fr}
+.gorus .karo img{width:100%;height:auto}
+.yakin{position:absolute;right:calc(12px + env(safe-area-inset-right,0px));top:12px;display:grid;gap:8px;z-index:3}
+.yakin button{width:52px;height:52px;border-radius:12px;border:1px solid #ffffff33;background:#000b;font:700 1.5rem var(--f-baslik);cursor:pointer;color:#fff}
+.gorus-mesaj{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--soluk);z-index:2;background:#000c;font-size:1.1rem}
+.zaman-damga{position:absolute;left:12px;bottom:12px;z-index:3;font:600 .9rem var(--f-veri);background:#000c;padding:6px 10px;border-radius:8px;border:1px solid #ffffff22}
+
+.oynatici{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px;padding:12px;background:var(--panel);border:1px solid var(--cizgi);border-radius:var(--r)}
+.oynatici input[type=range]{flex:1 1 200px;min-width:0;accent-color:var(--gunes);height:32px}
+.oynatici .kare-bilgi{font:600 .9rem var(--f-veri);color:var(--soluk);min-width:12ch}
+
+.kunye{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin-top:14px}
+.kunye div{background:var(--panel);border:1px solid var(--cizgi);border-radius:12px;padding:12px 14px;min-width:0}
+.kunye b{display:block;font:600 .75rem var(--f-veri);letter-spacing:.1em;text-transform:uppercase;color:var(--soluk);margin-bottom:4px}
+.kunye span{font-size:1.02rem;overflow-wrap:anywhere}
+.not{margin-top:12px;color:#cfd8e8;background:var(--panel);border-left:4px solid var(--renk,var(--gunes));border-radius:8px;padding:12px 16px;max-width:80ch}
+.eylemler{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+
+/* ISS */
+.iss-izgara{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.iss-izgara{grid-template-columns:1fr}}
+.video-kutu{position:relative;aspect-ratio:16/9;max-width:100%;background:#000;border-radius:var(--r);overflow:hidden;border:1px solid var(--cizgi)}
+.video-kutu iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.iss-yan{display:grid;gap:12px;align-content:start}
+#issHarita{height:300px;border-radius:var(--r);overflow:hidden;border:1px solid var(--cizgi);background:#0a1020}
+.telemetri{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.telemetri div{background:var(--panel);border:1px solid var(--cizgi);border-radius:12px;padding:10px 12px}
+.telemetri b{display:block;font:600 .72rem var(--f-veri);letter-spacing:.1em;text-transform:uppercase;color:var(--soluk)}
+.telemetri span{font:600 1.15rem var(--f-veri);font-variant-numeric:tabular-nums}
+.nerede{font:700 1.35rem var(--f-baslik);color:var(--c-iss)}
+.gece-not{background:#0b1733;border:1px solid #2b4aa0;border-radius:12px;padding:12px 14px}
+
+footer{border-top:1px solid var(--cizgi);margin-top:40px;padding-block:24px 40px;color:var(--soluk);font-size:.95rem}
+footer ul{padding-left:20px;margin:8px 0 14px;display:grid;gap:4px}
+footer a{overflow-wrap:anywhere}
+
+.bildirim{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#111a2e;border:1px solid var(--gunes);padding:12px 18px;border-radius:12px;z-index:2000;max-width:min(560px,calc(100% - 32px));box-shadow:0 10px 30px #0008}
+
+.leaflet-container{background:#0a1020;font:14px var(--f-govde)}
+.leaflet-tooltip{font:600 13px var(--f-govde)}
+.harita-yok{display:grid;place-items:center;height:100%;color:var(--soluk);padding:20px;text-align:center}
+.iss-ikon{font-size:26px;line-height:1;filter:drop-shadow(0 0 4px #000)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="ust">
+  <div class="sarmal">
+    <div class="ust-ic">
+      <button class="logo" id="logo" type="button" aria-label="Ana ekrana dön">
+        <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="11" fill="#1b4f8f"/><path d="M9 14c3-1 5 1 7 0s3-4 6-3 3 4 1 6-5 1-6 3-1 4-3 4-4-3-5-5 0-4 0-5z" fill="#3fa36b"/><circle cx="17" cy="17" r="11" fill="none" stroke="#9fd0ff" stroke-width="1.5"/><ellipse cx="17" cy="17" rx="16" ry="5" fill="none" stroke="#ffb547" stroke-width="1.6" transform="rotate(-20 17 17)"/><circle cx="31" cy="12" r="2.2" fill="#ffb547"/></svg>
+        Uzaydan Canlı Dünya
+      </button>
+      <div class="saat" id="saat" aria-live="off">--:--</div>
+    </div>
+    <nav class="sekmeler" id="sekmeler" aria-label="Sekmeler"></nav>
+  </div>
+</header>
+
+<main class="sarmal">
+
+  <!-- ANA EKRAN -->
+  <section id="v-ana" data-gorunum="ana">
+    <div class="giris">
+      <span class="etiket">Görev kontrol · Türkiye saati</span>
+      <h1>Dünya'ya uzaydan bak</h1>
+      <p>Uzay istasyonundan canlı video ve hava durumu uydularından gelen en yeni fotoğraflar. Her resmin altında ne zaman çekildiği yazar; renkli nokta da resmin ne kadar taze olduğunu söyler.</p>
+      <p style="display:flex;flex-wrap:wrap;gap:14px;font-size:.95rem"><span><i class="nokta yesil"></i> Güncel (30 dakikadan yeni)</span><span><i class="nokta sari"></i> Gecikmeli</span><span><i class="nokta kirmizi"></i> Şu an ulaşılamıyor</span></p>
+    </div>
+    <div class="kartlar" id="kartlar"></div>
+
+    <div class="bolum">
+      <span class="etiket">Hangi uydu nereyi görüyor?</span>
+      <h2>Uyduların gördüğü yerler</h2>
+      <p style="margin:0;color:var(--soluk);max-width:65ch">Renkli alanlar her uydunun görebildiği bölgedir. Bir alana dokununca o uydunun görüntüsü açılır. Turuncu istasyon simgesi uzay istasyonunun şu anki yeridir.</p>
+      <div class="lejant" id="lejant"></div>
+      <div class="harita-kutu" id="dunyaHarita"></div>
+    </div>
+
+    <div class="bolum">
+      <span class="etiket">Bilgi köşesi</span>
+      <h2>Bu uydular ne yapıyor?</h2>
+      <div class="bilgi-izgara" id="bilgiKosesi"></div>
+    </div>
+  </section>
+
+  <!-- ISS -->
+  <section id="v-iss" data-gorunum="iss" hidden>
+    <div class="sayfa-ust">
+      <div class="giris" style="margin:0">
+        <span class="etiket">Gerçek zamanlı · yaklaşık 400 km yukarıdan</span>
+        <h1>Uzay İstasyonundan Canlı Video</h1>
+      </div>
+      <div class="secenekler" id="issYayinlar"></div>
+    </div>
+    <div class="iss-izgara">
+      <div>
+        <div class="video-kutu" id="videoKutu"></div>
+        <div class="not" style="--renk:var(--c-iss)">Ekran siyah ya da düz mavi kalırsa endişelenme: istasyon her 90 dakikada bir Dünya'nın etrafını dolaşır, yarı zamanında gece tarafındadır. Bazen de uzay istasyonuyla bağlantı birkaç dakika kesilir; bu normaldir. Video açılmazsa <a id="issYoutubeLink" href="#" target="_blank" rel="noopener">NASA'nın canlı yayınlarını YouTube'da aç</a>.</div>
+      </div>
+      <div class="iss-yan">
+        <div class="etiket">İstasyon şu an nerede?</div>
+        <div class="nerede" id="issNerede">Konum alınıyor…</div>
+        <div class="gece-not" id="issGece" hidden></div>
+        <div id="issHarita"></div>
+        <div class="telemetri">
+          <div><b>Enlem</b><span id="tEnlem">–</span></div>
+          <div><b>Boylam</b><span id="tBoylam">–</span></div>
+          <div><b>Yükseklik</b><span id="tYuk">–</span></div>
+          <div><b>Hız</b><span id="tHiz">–</span></div>
+        </div>
+        <div class="zaman" style="font:400 .85rem var(--f-veri);color:var(--soluk)" id="issGuncel"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- UYDU GÖRÜNTÜ SAYFASI (Meteosat, GOES, Himawari, EPIC ortak) -->
+  <section id="v-uydu" data-gorunum="uydu" hidden>
+    <div class="uyari-bant" id="uGecikmeBant" hidden>Bu görüntüler 1–2 gün önce çekildi</div>
+    <div class="sayfa-ust">
+      <div class="giris" style="margin:0">
+        <span class="etiket" id="uEtiket"></span>
+        <h1 id="uBaslik"></h1>
+      </div>
+      <div class="secenekler" id="uSecenekler"></div>
+    </div>
+    <div class="gorus" id="gorus">
+      <div class="icerik" id="gorusIcerik"></div>
+      <div class="yakin">
+        <button type="button" id="zArti" aria-label="Yakınlaştır">+</button>
+        <button type="button" id="zEksi" aria-label="Uzaklaştır">−</button>
+        <button type="button" id="zSifir" aria-label="Tamamını göster" style="font-size:1rem">⤢</button>
+      </div>
+      <div class="gorus-mesaj" id="gorusMesaj">Görüntü yükleniyor…</div>
+      <div class="zaman-damga" id="zamanDamga" hidden></div>
+    </div>
+    <div class="oynatici" id="oynatici">
+      <button type="button" class="dugme ana" id="oynatDugme">▶ Son 3 saati oynat</button>
+      <input type="range" id="kareKaydir" min="0" max="0" value="0" aria-label="Kare seç" disabled>
+      <span class="kare-bilgi" id="kareBilgi"></span>
+      <div class="secenekler" id="hizlar" aria-label="Hız"></div>
+    </div>
+    <div class="kunye">
+      <div><b>Uydu</b><span id="kUydu">–</span></div>
+      <div><b>Dünya'dan uzaklığı</b><span id="kUzak">–</span></div>
+      <div><b>Çekim saati</b><span id="kSaat">–</span></div>
+      <div><b>Durum</b><span id="kDurum">–</span></div>
+    </div>
+    <div class="not" id="uNot"></div>
+    <div class="eylemler">
+      <button type="button" class="dugme" id="indirDugme">⬇ Görüntüyü indir</button>
+      <button type="button" class="dugme" id="tamEkranDugme">⛶ Tam ekran</button>
+      <button type="button" class="dugme" id="yenileDugme">↻ Şimdi yenile</button>
+      <a class="dugme" id="resmiSite" href="#" target="_blank" rel="noopener">Resmi siteye git ↗</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="sarmal">
+    <strong style="color:var(--yazi)">Kaynaklar</strong>
+    <ul id="kaynakListe"></ul>
+    <p style="margin:0">Görüntüler NASA, NOAA, EUMETSAT, JMA/NICT ve CIRA tarafından sağlanmaktadır. Harita © OpenStreetMap katkıda bulunanları.</p>
+  </div>
+</footer>
+
+<div class="bildirim" id="bildirim" role="status" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* =====================================================================
+   AYARLAR — bütün adresler burada. Bir kaynak değişirse yalnızca burayı düzeltin.
+   ===================================================================== */
+const AYARLAR = {
+  yenilemeDakika: 10,              // uydu görüntüleri en fazla bu sıklıkta yenilenir
+  issKonumSaniye: 5,               // ISS konumu kaç saniyede bir alınsın
+  iss: {
+    konumAdresi: "https://api.wheretheiss.at/v1/satellites/25544",
+    ulkeAdresi:  "https://api.wheretheiss.at/v1/coordinates/",   // sonuna "enlem,boylam" eklenir
+    youtubeKanal: "UCLA_DiR1FfKNvjuUpBHmylQ",                      // NASA resmi kanalı
+    youtubeVideo: "",               // Belirli bir yayın kimliği (11 harf). Boşsa kanalın canlı yayını açılır.
+    yayinlar: [                     // Ek yayınlar (kimlik değişirse güncelleyin)
+      { ad: "NASA canlı yayını", kanal: "UCLA_DiR1FfKNvjuUpBHmylQ" }
+    ],
+    yayinlarSayfasi: "https://www.youtube.com/@NASA/streams",
+    resmiSite: "https://www.nasa.gov/international-space-station/"
+  },
+  meteosat: {
+    wms: "https://view.eumetsat.int/geoserver/wms",
+    katmanlar: {
+      renkli:     { ad: "Gerçek renk (gece şehir ışıkları)", katman: "mtg_fd:rgb_geocolour", uydu: "Meteosat-12 (MTG)" },
+      dogal:      { ad: "Doğal renk",                         katman: "msg_fes:rgb_naturalenhncd", uydu: "Meteosat (MSG, 0°)" },
+      kizilotesi: { ad: "Kızılötesi (gece de görür)",         katman: "msg_fes:ir108", uydu: "Meteosat (MSG, 0°)" }
+    },
+    alanlar: {
+      disk:    { ad: "Tüm görüş alanı", bbox: [-75, -75, 75, 75], w: 1200, h: 1200 },   // [güney, batı, kuzey, doğu]
+      avrupa:  { ad: "Avrupa",          bbox: [30, -25, 72, 50],  w: 1400, h: 1000 },
+      turkiye: { ad: "Türkiye",         bbox: [35, 25, 43, 45],   w: 1500, h: 760 }
+    },
+    resmiSite: "https://view.eumetsat.int/"
+  },
+  goes: {
+    cdn: "https://cdn.star.nesdis.gov/",    // + GOES19/ABI/FD/GEOCOLOR/
+    dogu: { kod: "GOES19", ad: "GOES-19 (GOES-Doğu)", boylam: -75.2 },
+    bati: { kod: "GOES18", ad: "GOES-18 (GOES-Batı)", boylam: -137.0 },
+    buyuk: "1808x1808", kucuk: "678x678", minik: "339x339",
+    resmiSite: "https://www.star.nesdis.gov/GOES/"
+  },
+  himawari: {
+    slider: "https://slider.cira.colostate.edu/",
+    zamanlar: "data/json/himawari/full_disk/geocolor/latest_times.json",
+    resim: "data/imagery/{Y}/{M}/{D}/himawari---full_disk/geocolor/{ZAMAN}/{Z}/{SATIR}_{SUTUN}.png",
+    nict: "https://himawari8.nict.go.jp/img/D531106/1d/550/{Y}/{M}/{D}/{HMS}_0_0.png",
+    nictSon: "https://himawari8.nict.go.jp/img/D531106/latest.json",
+    resmiSite: "https://slider.cira.colostate.edu/?sat=himawari"
+  },
+  epic: {
+    api: "https://epic.gsfc.nasa.gov/api/natural",
+    yedekApi: "https://api.nasa.gov/EPIC/api/natural?api_key=DEMO_KEY",
+    arsiv: "https://epic.gsfc.nasa.gov/archive/natural/{Y}/{M}/{D}/{TUR}/{AD}.{UZ}",
+    resmiSite: "https://epic.gsfc.nasa.gov/"
+  }
+};
+
+/* ===================== Yardımcılar ===================== */
+const $ = id => document.getElementById(id);
+const TZ = "Europe/Istanbul";
+const DK = 60000;
+const iki = n => String(n).padStart(2, "0");
+const saatYaz = d => d.toLocaleString("tr-TR", { timeZone: TZ, day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+const kisaSaat = d => d.toLocaleString("tr-TR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+function onceYaz(d) {
+  if (!d) return "Çekim saati bilinmiyor";
+  const dk = Math.max(0, Math.round((Date.now() - d.getTime()) / DK));
+  if (dk < 1) return "Az önce çekildi";
+  if (dk < 60) return dk + " dakika önce çekildi";
+  const sa = Math.floor(dk / 60);
+  if (sa < 48) return sa + " saat " + (dk % 60) + " dakika önce çekildi";
+  return Math.floor(sa / 24) + " gün önce çekildi";
+}
+function utc(d) {
+  return { Y: d.getUTCFullYear(), M: iki(d.getUTCMonth() + 1), D: iki(d.getUTCDate()), h: iki(d.getUTCHours()), m: iki(d.getUTCMinutes()), s: iki(d.getUTCSeconds()) };
+}
+function yilinGunu(d) {
+  const bas = Date.UTC(d.getUTCFullYear(), 0, 1);
+  return String(Math.floor((d.getTime() - bas) / 86400000) + 1).padStart(3, "0");
+}
+function doldur(sablon, deg) { return sablon.replace(/\{(\w+)\}/g, (_, k) => deg[k] ?? ""); }
+function resimDene(url, sure = 20000) {
+  return new Promise((coz, red) => {
+    const img = new Image();
+    const z = setTimeout(() => { img.src = ""; red(new Error("zaman aşımı")); }, sure);
+    img.onload = () => { clearTimeout(z); (img.naturalWidth > 2 ? coz(img) : red(new Error("boş resim"))); };
+    img.onerror = () => { clearTimeout(z); red(new Error("yüklenemedi")); };
+    img.src = url;
+  });
+}
+async function jsonAl(url, sure = 15000) {
+  const ctrl = new AbortController();
+  const z = setTimeout(() => ctrl.abort(), sure);
+  try {
+    const c = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+    if (!c.ok) throw new Error("HTTP " + c.status);
+    return await c.json();
+  } finally { clearTimeout(z); }
+}
+const onbellekKir = url => url + (url.includes("?") ? "&" : "?") + "t=" + Math.floor(Date.now() / (AYARLAR.yenilemeDakika * DK));
+function durumRengi(zaman, hata) {
+  if (hata) return "kirmizi";
+  if (!zaman) return "sari";
+  return (Date.now() - zaman.getTime()) < 30 * DK ? "yesil" : "sari";
+}
+function bildir(metin) {
+  const b = $("bildirim"); b.textContent = metin; b.hidden = false;
+  clearTimeout(bildir.z); bildir.z = setTimeout(() => b.hidden = true, 5000);
+}
+const depo = {
+  al(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  yaz(k, v) { try { localStorage.setItem(k, v); } catch {} }
+};
+const ULASILAMIYOR = "Bu uyduya şu an ulaşılamıyor, birazdan tekrar denenecek.";
+
+/* ===================== Kaynaklar ===================== */
+/* Her kaynak: bul(secim) -> { url, onizleme, zaman, indir, karolar? } ; kareler(secim, son) -> [{url, zaman}] */
+
+function wmsAdres(katman, alan, zaman) {
+  const b = alan.bbox;
+  const p = new URLSearchParams({
+    service: "WMS", request: "GetMap", version: "1.3.0", layers: katman, styles: "",
+    crs: "EPSG:4326", bbox: b.join(","), width: alan.w, height: alan.h, format: "image/jpeg"
+  });
+  if (zaman) p.set("time", zaman.toISOString().replace(/\.\d{3}Z$/, "Z"));
+  return AYARLAR.meteosat.wms + "?" + p.toString();
+}
+const wmsZaman = {};   // katman -> { son: Date, adim: dk }
+async function wmsSonZaman(katman) {
+  const [ad, isim] = katman.split(":");
+  const url = AYARLAR.meteosat.wms.replace(/\/wms$/, "") + "/" + ad + "/" + isim + "/ows?service=WMS&request=GetCapabilities&version=1.3.0";
+  const ctrl = new AbortController(); const z = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const c = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+    const xml = new DOMParser().parseFromString(await c.text(), "text/xml");
+    const boyut = [...xml.getElementsByTagName("Dimension")].find(d => d.getAttribute("name") === "time");
+    if (!boyut) throw new Error("zaman yok");
+    const parca = boyut.textContent.trim().split(",").pop().split("/");
+    const son = new Date(parca[1] || parca[0]);
+    const m = /PT(\d+)M/.exec(parca[2] || "");
+    if (isNaN(son)) throw new Error("zaman okunamadı");
+    return { son, adim: m ? +m[1] : 15 };
+  } finally { clearTimeout(z); }
+}
+
+const KAYNAKLAR = {
+  meteosat: {
+    id: "meteosat", sekme: "Türkiye ve Avrupa", kart: "Türkiye ve Avrupa (Meteosat)", renk: "--c-met",
+    etiket: "Her 10–15 dakikada yeni fotoğraf · 0° boylam üzerinde",
+    uzaklik: "Yaklaşık 36.000 km (sabit yörünge)", resmi: AYARLAR.meteosat.resmiSite,
+    secimler: [
+      { grup: "alan", ad: "Türkiye", deger: "turkiye" }, { grup: "alan", ad: "Avrupa", deger: "avrupa" }, { grup: "alan", ad: "Tüm görüş alanı", deger: "disk" },
+      { grup: "katman", ad: "Gerçek renk", deger: "renkli" }, { grup: "katman", ad: "Doğal renk", deger: "dogal" }, { grup: "katman", ad: "Kızılötesi", deger: "kizilotesi" }
+    ],
+    varsayilan: { alan: "turkiye", katman: "renkli" },
+    not: "Meteosat, Afrika'nın batısında Ekvator'un tam üstünde durur ve Türkiye'yi, Avrupa'yı ve Afrika'yı sürekli görür. Gerçek renk görüntüde gündüz bulutlar beyaz, denizler koyu mavidir; gece tarafında kızılötesi ölçüm ve şehir ışıkları gösterilir. Kızılötesi görüntü ısıyı ölçtüğü için geceleri de bulutları gösterir: soğuk ve yüksek bulutlar beyaz görünür.",
+    uyduAdi: s => AYARLAR.meteosat.katmanlar[s.katman].uydu,
+    async bul(s) {
+      const k = AYARLAR.meteosat.katmanlar[s.katman].katman;
+      const alan = AYARLAR.meteosat.alanlar[s.alan];
+      let bilgi = null;
+      try { bilgi = await wmsSonZaman(k); } catch { bilgi = null; }
+      // Liste 90 dakikadan eskiyse güvenilmez: en yeni görüntüyü saat bilgisi olmadan göster.
+      if (bilgi && Date.now() - bilgi.son.getTime() > 90 * DK) bilgi = null;
+      if (bilgi) wmsZaman[k] = bilgi; else delete wmsZaman[k];
+      const url = bilgi ? wmsAdres(k, alan, bilgi.son) : onbellekKir(wmsAdres(k, alan, null));
+      await resimDene(url, 30000);
+      const onAlan = { bbox: AYARLAR.meteosat.alanlar.disk.bbox, w: 500, h: 500 };
+      return { url, indir: url, zaman: bilgi ? bilgi.son : null,
+               onizleme: bilgi ? wmsAdres(k, onAlan, bilgi.son) : onbellekKir(wmsAdres(k, onAlan, null)) };
+    },
+    kareler(s) {
+      const k = AYARLAR.meteosat.katmanlar[s.katman].katman;
+      const b = wmsZaman[k]; if (!b) return null;
+      const adet = Math.round(180 / b.adim) + 1, alan = AYARLAR.meteosat.alanlar[s.alan];
+      const kucuk = { bbox: alan.bbox, w: Math.round(alan.w * .6), h: Math.round(alan.h * .6) };
+      const liste = [];
+      for (let i = adet - 1; i >= 0; i--) { const z = new Date(b.son.getTime() - i * b.adim * DK); liste.push({ url: wmsAdres(k, kucuk, z), zaman: z }); }
+      return liste;
+    }
+  },
+
+  goes: {
+    id: "goes", sekme: "Amerika", kart: "Amerika (GOES)", renk: "--c-goesE",
+    etiket: "Her 10 dakikada yeni fotoğraf · NOAA hava durumu uyduları",
+    uzaklik: "Yaklaşık 36.000 km (sabit yörünge)", resmi: AYARLAR.goes.resmiSite,
+    secimler: [ { grup: "uydu", ad: "GOES-Doğu (Atlantik ve iki Amerika)", deger: "dogu" }, { grup: "uydu", ad: "GOES-Batı (Pasifik)", deger: "bati" } ],
+    varsayilan: { uydu: "dogu" },
+    not: "GeoColor görüntüsü gündüz tarafını gerçek renklerle, gece tarafını ise şehir ışıklarıyla gösterir. Şehir ışıkları kalıcı bir gece haritasından eklenir; bulutlar ise her 10 dakikada bir yeniden ölçülür.",
+    uyduAdi: s => AYARLAR.goes[s.uydu].ad,
+    klasor: s => AYARLAR.goes.cdn + AYARLAR.goes[s.uydu].kod + "/ABI/FD/GEOCOLOR/",
+    dosya(s, z, boyut) { const u = utc(z); return this.klasor(s) + u.Y + yilinGunu(z) + u.h + u.m + "_" + AYARLAR.goes[s.uydu].kod + "-ABI-FD-GEOCOLOR-" + boyut + ".jpg"; },
+    async bul(s) {
+      const adim = 10 * DK;
+      const bas = Math.floor(Date.now() / adim) * adim;
+      for (let i = 0; i < 9; i++) {
+        const z = new Date(bas - i * adim);
+        try {
+          await resimDene(this.dosya(s, z, AYARLAR.goes.minik), 12000);
+          this._son = this._son || {}; this._son[s.uydu] = z;
+          return { url: this.dosya(s, z, AYARLAR.goes.buyuk), indir: this.dosya(s, z, AYARLAR.goes.buyuk), onizleme: this.dosya(s, z, AYARLAR.goes.kucuk), zaman: z };
+        } catch {}
+      }
+      // Zaman damgalı dosya bulunamadı: "latest" dosyasını göster, saat bilinmiyor.
+      const url = onbellekKir(this.klasor(s) + AYARLAR.goes.buyuk + ".jpg");
+      await resimDene(url, 30000);
+      return { url, indir: url, onizleme: onbellekKir(this.klasor(s) + AYARLAR.goes.kucuk + ".jpg"), zaman: null };
+    },
+    kareler(s) {
+      const son = this._son && this._son[s.uydu]; if (!son) return null;
+      const liste = [];
+      for (let i = 18; i >= 0; i--) { const z = new Date(son.getTime() - i * 10 * DK); liste.push({ url: this.dosya(s, z, AYARLAR.goes.kucuk), zaman: z }); }
+      return liste;
+    }
+  },
+
+  himawari: {
+    id: "himawari", sekme: "Asya", kart: "Asya (Himawari)", renk: "--c-him",
+    etiket: "Her 10 dakikada yeni fotoğraf · Japonya'nın uydusu",
+    uzaklik: "Yaklaşık 36.000 km (sabit yörünge)", resmi: AYARLAR.himawari.resmiSite,
+    secimler: [], varsayilan: {},
+    not: "Himawari-9, Japonya'nın hava durumu uydusudur ve Asya, Avustralya ile Pasifik Okyanusu'nu görür. GeoColor görüntüsü gündüz gerçek renkli, gece ise şehir ışıklı görünür. Görüntüler Colorado Eyalet Üniversitesi'ndeki CIRA'nın SLIDER servisinden gelir.",
+    uyduAdi: () => "Himawari-9",
+    tasima: "slider",
+    karoAdres(z, seviye, satir, sutun) {
+      const u = utc(z);
+      return AYARLAR.himawari.slider + doldur(AYARLAR.himawari.resim, { Y: u.Y, M: u.M, D: u.D, ZAMAN: "" + u.Y + u.M + u.D + u.h + u.m + u.s, Z: iki(seviye), SATIR: String(satir).padStart(3, "0"), SUTUN: String(sutun).padStart(3, "0") });
+    },
+    nictAdres(z) { const u = utc(z); return doldur(AYARLAR.himawari.nict, { Y: u.Y, M: u.M, D: u.D, HMS: u.h + u.m + "00" }); },
+    async bul() {
+      let zamanlar = [];
+      try {
+        const j = await jsonAl(AYARLAR.himawari.slider + AYARLAR.himawari.zamanlar);
+        zamanlar = (j.timestamps_int || []).map(t => { const s = String(t); return new Date(Date.UTC(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8), +s.slice(8,10), +s.slice(10,12), +s.slice(12,14))); });
+      } catch {
+        const adim = 10 * DK, bas = Math.floor(Date.now() / adim) * adim;
+        for (let i = 1; i < 10; i++) zamanlar.push(new Date(bas - i * adim));
+      }
+      for (const z of zamanlar.slice(0, 9)) {
+        try {
+          await resimDene(this.karoAdres(z, 0, 0, 0), 15000);
+          this.tasima = "slider"; this._son = z; this._liste = zamanlar;
+          const karolar = [[0,0],[0,1],[1,0],[1,1]].map(([r, c]) => this.karoAdres(z, 1, r, c));
+          return { url: this.karoAdres(z, 0, 0, 0), karolar, indir: this.karoAdres(z, 0, 0, 0), onizleme: this.karoAdres(z, 0, 0, 0), zaman: z };
+        } catch {}
+      }
+      // Yedek: NICT
+      let nz = [];
+      try { const j = await jsonAl(AYARLAR.himawari.nictSon); nz = [new Date(j.date.replace(" ", "T") + "Z")]; }
+      catch { const adim = 10 * DK, bas = Math.floor(Date.now() / adim) * adim; for (let i = 2; i < 10; i++) nz.push(new Date(bas - i * adim)); }
+      for (const z of nz) {
+        try {
+          await resimDene(this.nictAdres(z), 15000);
+          this.tasima = "nict"; this._son = z; this._liste = null;
+          return { url: this.nictAdres(z), indir: this.nictAdres(z), onizleme: this.nictAdres(z), zaman: z };
+        } catch {}
+      }
+      throw new Error("Himawari bulunamadı");
+    },
+    kareler() {
+      if (!this._son) return null;
+      const liste = [];
+      for (let i = 18; i >= 0; i--) {
+        const z = new Date(this._son.getTime() - i * 10 * DK);
+        liste.push({ url: this.tasima === "slider" ? this.karoAdres(z, 0, 0, 0) : this.nictAdres(z), zaman: z });
+      }
+      return liste;
+    }
+  },
+
+  epic: {
+    id: "epic", sekme: "Tam Dünya", kart: "Tam Dünya (NASA EPIC)", renk: "--c-epic",
+    etiket: "1–2 gün gecikmeli · DSCOVR uydusundaki EPIC kamerası",
+    uzaklik: "Yaklaşık 1,5 milyon km", resmi: AYARLAR.epic.resmiSite,
+    secimler: [], varsayilan: {}, gecikmeli: true,
+    not: "EPIC kamerası Dünya ile Güneş'in arasında, 1,5 milyon km uzakta durur; bu yüzden Dünya'nın hep Güneş'in aydınlattığı tarafını tam yuvarlak olarak görür. Fotoğraflar önce NASA'da işlenir, bu yüzden 1–2 gün sonra yayınlanır. Oynat düğmesine basınca o günün fotoğrafları art arda gösterilir ve Dünya'nın kendi etrafında dönüşünü izlersin.",
+    uyduAdi: () => "DSCOVR (EPIC kamerası)",
+    adres(kayit, tur) {
+      const d = new Date(kayit.date.replace(" ", "T") + "Z"), u = utc(d);
+      return doldur(AYARLAR.epic.arsiv, { Y: u.Y, M: u.M, D: u.D, TUR: tur, AD: kayit.image, UZ: tur === "png" ? "png" : "jpg" });
+    },
+    async bul() {
+      let liste;
+      try { liste = await jsonAl(AYARLAR.epic.api); }
+      catch { liste = await jsonAl(AYARLAR.epic.yedekApi); }
+      if (!Array.isArray(liste) || !liste.length) throw new Error("EPIC boş");
+      liste.sort((a, b) => a.date.localeCompare(b.date));
+      this._liste = liste;
+      const son = liste[liste.length - 1];
+      const url = this.adres(son, "jpg");
+      await resimDene(url, 30000);
+      return { url, indir: this.adres(son, "png"), onizleme: this.adres(son, "thumbs"), zaman: new Date(son.date.replace(" ", "T") + "Z") };
+    },
+    kareler() {
+      if (!this._liste) return null;
+      return this._liste.map(k => ({ url: this.adres(k, "jpg"), zaman: new Date(k.date.replace(" ", "T") + "Z") }));
+    }
+  }
+};
+
+const BILGI = [
+  { ad: "Uluslararası Uzay İstasyonu", renk: "--c-iss", mesafe: "Yaklaşık 400 km yukarıda",
+    metin: "İçinde astronotların yaşadığı dev bir laboratuvardır. Saatte 27.600 km hızla gider ve Dünya'nın etrafını 90 dakikada bir dolaşır, yani astronotlar her gün 16 kez gün doğumu görür. Dışındaki kameralar gerçekten canlı video gönderir. İstasyon gece tarafına geçince aşağısı karanlık olduğu için ekran kararır." },
+  { ad: "Meteosat", renk: "--c-met", mesafe: "Yaklaşık 36.000 km uzakta",
+    metin: "Avrupa'nın hava durumu uydusudur ve hep aynı yerin üstünde durur, çünkü Dünya ile aynı hızda döner. Türkiye'yi sürekli gördüğü için hava tahmincileri bulutları ondan izler. Her 10–15 dakikada bir yeni fotoğraf çeker, çünkü koca bir yarım küreyi satır satır taramak bu kadar sürer." },
+  { ad: "GOES-Doğu ve GOES-Batı", renk: "--c-goesE", mesafe: "Yaklaşık 36.000 km uzakta",
+    metin: "Amerika'nın iki hava durumu uydusudur; biri Atlantik'i ve iki Amerika kıtasını, diğeri Pasifik'i izler. Kasırgaları ve fırtınaları erkenden görüp insanları uyarmaya yardım ederler. Her 10 dakikada bir tam Dünya fotoğrafı gönderirler. Gece tarafında Güneş ışığı olmadığı için şehir ışıkları gösterilir." },
+  { ad: "Himawari-9", renk: "--c-him", mesafe: "Yaklaşık 36.000 km uzakta",
+    metin: "Japonca'da \"ayçiçeği\" demektir. Japonya'nın hava durumu uydusudur ve Asya ile Avustralya'yı görür. Tayfunları takip etmek için çok önemlidir. O da her 10 dakikada bir yeni fotoğraf çeker." },
+  { ad: "DSCOVR ve EPIC kamerası", renk: "--c-epic", mesafe: "Yaklaşık 1,5 milyon km uzakta",
+    metin: "Ay'dan dört kat daha uzaktadır ve Dünya'yı hep Güneş'in aydınlattığı tarafından, tam yuvarlak görür. Günde 10–20 kadar fotoğraf çeker. Bu fotoğraflar NASA'da işlendikten sonra 1–2 gün gecikmeyle yayınlanır, bu yüzden canlı değildir ama en güzel tam Dünya fotoğraflarıdır." }
+];
+
+/* ===================== Durum ===================== */
+const durum = {
+  gorunum: "ana",
+  secim: {},              // kaynak -> seçim nesnesi
+  sonuc: {},              // kaynak -> son bulunan görüntü bilgisi
+  hata: {},               // kaynak -> true/false
+  zamanlayici: {}         // kaynak -> yenileme zamanı
+};
+for (const k in KAYNAKLAR) durum.secim[k] = { ...KAYNAKLAR[k].varsayilan };
+
+/* ===================== Sekmeler ===================== */
+const SEKMELER = [
+  { id: "ana", ad: "Ana ekran" },
+  { id: "iss", ad: "Canlı video" },
+  { id: "meteosat", ad: KAYNAKLAR.meteosat.sekme },
+  { id: "goes", ad: KAYNAKLAR.goes.sekme },
+  { id: "himawari", ad: KAYNAKLAR.himawari.sekme },
+  { id: "epic", ad: KAYNAKLAR.epic.sekme }
+];
+function sekmeleriCiz() {
+  $("sekmeler").innerHTML = SEKMELER.map(s =>
+    `<button type="button" data-git="${s.id}" ${durum.gorunum === s.id ? 'aria-current="page"' : ""}>${s.id !== "ana" ? `<i class="nokta" data-nokta="${s.id}"></i>` : ""}${s.ad}</button>`).join("");
+  noktalariGuncelle();
+}
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-git]");
+  if (g) { git(g.dataset.git); }
+});
+$("logo").onclick = () => git("ana");
+
+function git(id) {
+  if (!SEKMELER.some(s => s.id === id)) id = "ana";
+  durum.gorunum = id;
+  depo.yaz("ucd-sekme", id);
+  oynaticiDurdur();
+  $("v-ana").hidden = id !== "ana";
+  $("v-iss").hidden = id !== "iss";
+  $("v-uydu").hidden = !KAYNAKLAR[id];
+  sekmeleriCiz();
+  if (id === "iss") issSayfasiAc(); else issVideoKapat();
+  if (KAYNAKLAR[id]) uyduSayfasiAc(id);
+  if (id === "ana" && haritalar.dunya) setTimeout(() => haritalar.dunya.invalidateSize(), 50);
+  window.scrollTo({ top: 0 });
+}
+
+/* ===================== Ana ekran kartları ===================== */
+function kartlariCiz() {
+  const issKart = `
+    <button type="button" class="kart" data-git="iss" style="--renk:var(--c-iss)">
+      <div class="kart-resim"><div class="mini-harita" id="issMini"></div><span class="rozet canli">● CANLI VİDEO</span></div>
+      <div class="kart-alt"><h3><i class="nokta" data-nokta="iss"></i>Uzay İstasyonundan Canlı Video</h3>
+      <div class="zaman" id="kz-iss">İstasyonun konumu alınıyor…</div></div>
+    </button>`;
+  const digerleri = Object.values(KAYNAKLAR).map(k => `
+    <button type="button" class="kart" data-git="${k.id}" style="--renk:var(${k.renk})">
+      <div class="kart-resim"><span class="yukleniyor" id="ky-${k.id}">Görüntü yükleniyor…</span><img id="ki-${k.id}" alt="${k.kart} önizlemesi" hidden><span class="rozet">${k.gecikmeli ? "1–2 GÜN GECİKMELİ" : "10–15 DAKİKADA BİR"}</span></div>
+      <div class="kart-alt"><h3><i class="nokta" data-nokta="${k.id}"></i>${k.kart}</h3>
+      <div class="zaman" id="kz-${k.id}">Kontrol ediliyor…</div></div>
+    </button>`).join("");
+  $("kartlar").innerHTML = issKart + digerleri;
+}
+function kartGuncelle(id) {
+  const s = durum.sonuc[id], h = durum.hata[id];
+  const img = $("ki-" + id), yaz = $("ky-" + id), z = $("kz-" + id);
+  if (!img) return;
+  if (h && !s) { img.hidden = true; yaz.hidden = false; yaz.textContent = ULASILAMIYOR; z.textContent = "Ulaşılamıyor"; }
+  else if (s) {
+    img.onload = () => { img.hidden = false; yaz.hidden = true; };
+    img.onerror = () => { img.hidden = true; yaz.hidden = false; yaz.textContent = "Önizleme yüklenemedi"; };
+    if (img.getAttribute("src") !== s.onizleme) img.src = s.onizleme;
+    z.innerHTML = s.zaman ? `${saatYaz(s.zaman)}<br>${onceYaz(s.zaman)}` : "Çekim saati bilinmiyor";
+    if (h) z.innerHTML += "<br>Son denemede ulaşılamadı";
+  }
+  noktalariGuncelle();
+}
+function noktalariGuncelle() {
+  document.querySelectorAll("[data-nokta]").forEach(n => {
+    const id = n.dataset.nokta;
+    let renk = "";
+    if (id === "iss") renk = issDurum.hata ? "kirmizi" : (issDurum.konum ? "yesil" : "");
+    else if (durum.hata[id] && !durum.sonuc[id]) renk = "kirmizi";
+    else if (durum.sonuc[id]) renk = durum.hata[id] ? "kirmizi" : (KAYNAKLAR[id].gecikmeli ? "sari" : durumRengi(durum.sonuc[id].zaman, false));
+    n.className = "nokta " + renk;
+    n.title = { yesil: "Güncel", sari: "Gecikmeli", kirmizi: "Ulaşılamıyor", "": "Kontrol ediliyor" }[renk];
+  });
+}
+
+/* Görüntüleri al ve yenile. Aynı istek bir kez yapılır, sonuç 10 dakika saklanır. */
+const onbellek = {};
+function kaynakYukle(id, secim, zorla) {
+  const anahtar = id + JSON.stringify(secim);
+  const o = onbellek[anahtar];
+  if (!zorla && o && (o.bekliyor || Date.now() - o.alindi < AYARLAR.yenilemeDakika * DK)) return o.soz;
+  const kayit = { bekliyor: true, alindi: Date.now() };
+  kayit.soz = KAYNAKLAR[id].bul({ ...secim }).finally(() => { kayit.bekliyor = false; kayit.alindi = Date.now(); });
+  kayit.soz.catch(() => { if (onbellek[anahtar] === kayit) delete onbellek[anahtar]; });
+  onbellek[anahtar] = kayit;
+  return kayit.soz;
+}
+async function kartYukle(id, zorla) {
+  try {
+    durum.sonuc[id] = await kaynakYukle(id, KAYNAKLAR[id].varsayilan, zorla);
+    durum.hata[id] = false;
+  } catch (e) {
+    console.warn(id, e);
+    durum.hata[id] = true;
+  }
+  kartGuncelle(id);
+}
+function tumunuYukle() { for (const id in KAYNAKLAR) kartYukle(id); }
+
+/* ===================== Görüntü sayfası ===================== */
+const gorus = { olcek: 1, x: 0, y: 0, gen: 0, yuk: 0 };
+let aktifSonuc = null;
+let yuklemeNo = 0;
+
+function uyduSayfasiAc(id) {
+  const k = KAYNAKLAR[id];
+  $("v-uydu").style.setProperty("--renk", `var(${k.renk})`);
+  $("uEtiket").textContent = k.etiket;
+  $("uBaslik").textContent = k.kart;
+  $("uGecikmeBant").hidden = !k.gecikmeli;
+  $("uNot").textContent = k.not;
+  $("uNot").style.setProperty("--renk", `var(${k.renk})`);
+  $("kUzak").textContent = k.uzaklik;
+  $("resmiSite").href = k.resmi;
+  $("oynatDugme").textContent = k.gecikmeli ? "▶ Dünya'nın dönüşünü oynat" : "▶ Son 3 saati oynat";
+  seceneklerCiz(id);
+  gorunumYukle(id, false);
+}
+function seceneklerCiz(id) {
+  const k = KAYNAKLAR[id], s = durum.secim[id];
+  $("uSecenekler").innerHTML = k.secimler.map(o =>
+    `<button type="button" data-grup="${o.grup}" data-deger="${o.deger}" aria-pressed="${s[o.grup] === o.deger}">${o.ad}</button>`).join("");
+  $("uSecenekler").onclick = e => {
+    const b = e.target.closest("button[data-grup]"); if (!b) return;
+    durum.secim[id][b.dataset.grup] = b.dataset.deger;
+    seceneklerCiz(id);
+    oynaticiDurdur();
+    gorunumYukle(id, false);
+  };
+}
+async function gorunumYukle(id, zorla) {
+  const no = ++yuklemeNo;
+  const k = KAYNAKLAR[id];
+  mesajGoster("Görüntü yükleniyor…");
+  $("zamanDamga").hidden = true;
+  $("kUydu").textContent = k.uyduAdi(durum.secim[id]);
+  $("kSaat").textContent = "–"; $("kDurum").innerHTML = '<i class="nokta"></i> Kontrol ediliyor';
+  kareleriHazirla(null);
+  try {
+    const s = await kaynakYukle(id, durum.secim[id], zorla);
+    if (no !== yuklemeNo || durum.gorunum !== id) return;
+    aktifSonuc = { ...s, id };
+    icerikKoy(s);
+    bilgileriYaz(id, s, false);
+    kareleriHazirla(k.kareler(durum.secim[id], s));
+  } catch {
+    if (no !== yuklemeNo) return;
+    aktifSonuc = null;
+    mesajGoster(ULASILAMIYOR);
+    bilgileriYaz(id, null, true);
+  }
+}
+function bilgileriYaz(id, s, hata) {
+  const k = KAYNAKLAR[id];
+  if (hata) { $("kSaat").textContent = "Çekim saati bilinmiyor"; $("kDurum").innerHTML = '<i class="nokta kirmizi"></i> Ulaşılamıyor'; return; }
+  $("kSaat").textContent = s.zaman ? saatYaz(s.zaman) + " · " + onceYaz(s.zaman) : "Çekim saati bilinmiyor";
+  const r = k.gecikmeli ? "sari" : durumRengi(s.zaman, false);
+  $("kDurum").innerHTML = `<i class="nokta ${r}"></i> ${r === "yesil" ? "Güncel" : k.gecikmeli ? "Gecikmeli (1–2 gün)" : s.zaman ? "Gecikmeli" : "Saat bilinmiyor"}`;
+  zamanDamgasi(s.zaman);
+}
+function zamanDamgasi(z) {
+  const d = $("zamanDamga"); d.hidden = false;
+  d.textContent = z ? saatYaz(z) + " · " + onceYaz(z) : "Çekim saati bilinmiyor";
+}
+function mesajGoster(m) { const e = $("gorusMesaj"); e.hidden = !m; e.textContent = m || ""; }
+
+function icerikKoy(s) {
+  const kap = $("gorusIcerik");
+  kap.innerHTML = "";
+  let el;
+  if (s.karolar) {
+    el = document.createElement("div"); el.className = "karo"; el.style.width = "1376px";
+    s.karolar.forEach(u => { const i = new Image(); i.alt = ""; i.src = u; el.appendChild(i); });
+    gorus.gen = 1376; gorus.yuk = 1376;
+    // İlk anda düşük çözünürlüklü tek karoyu altta göster, büyük karolar gelince üstüne biner
+    el.style.background = `url("${s.url}") center/100% 100% no-repeat`;
+    kap.appendChild(el); mesajGoster(""); sigdir();
+  } else {
+    el = new Image(); el.alt = "Uydu görüntüsü"; el.draggable = false;
+    el.onload = () => { gorus.gen = el.naturalWidth; gorus.yuk = el.naturalHeight; mesajGoster(""); sigdir(); };
+    el.onerror = () => mesajGoster(ULASILAMIYOR);
+    el.src = s.url;
+    kap.appendChild(el);
+  }
+}
+function sigdir() {
+  const r = $("gorus").getBoundingClientRect();
+  if (!gorus.gen) return;
+  gorus.olcek = Math.min(r.width / gorus.gen, r.height / gorus.yuk);
+  gorus.min = gorus.olcek;
+  gorus.x = -gorus.gen * gorus.olcek / 2; gorus.y = -gorus.yuk * gorus.olcek / 2;
+  uygula();
+}
+function uygula() {
+  $("gorusIcerik").style.transform = `translate(${gorus.x}px, ${gorus.y}px) scale(${gorus.olcek})`;
+}
+function yakinlas(kat, cx, cy) {
+  const r = $("gorus").getBoundingClientRect();
+  if (cx == null) { cx = r.width / 2; cy = r.height / 2; }
+  const ox = cx - r.width / 2, oy = cy - r.height / 2;   // merkeze göre nokta
+  const yeni = Math.max(gorus.min || .05, Math.min((gorus.min || 1) * 12, gorus.olcek * kat));
+  const f = yeni / gorus.olcek;
+  gorus.x = ox - (ox - gorus.x) * f; gorus.y = oy - (oy - gorus.y) * f;
+  gorus.olcek = yeni; uygula();
+}
+(function surukle() {
+  const el = $("gorus"), isaret = new Map(); let sonMesafe = 0;
+  el.addEventListener("pointerdown", e => { if (e.target.closest(".yakin")) return; el.setPointerCapture(e.pointerId); isaret.set(e.pointerId, { x: e.clientX, y: e.clientY }); });
+  el.addEventListener("pointermove", e => {
+    if (!isaret.has(e.pointerId)) return;
+    const once = isaret.get(e.pointerId);
+    isaret.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (isaret.size === 1) { gorus.x += e.clientX - once.x; gorus.y += e.clientY - once.y; uygula(); }
+    else if (isaret.size === 2) {
+      const [a, b] = [...isaret.values()];
+      const m = Math.hypot(a.x - b.x, a.y - b.y);
+      const r = el.getBoundingClientRect();
+      if (sonMesafe) yakinlas(m / sonMesafe, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
+      sonMesafe = m;
+    }
+  });
+  const bitir = e => { isaret.delete(e.pointerId); if (isaret.size < 2) sonMesafe = 0; };
+  el.addEventListener("pointerup", bitir); el.addEventListener("pointercancel", bitir);
+  el.addEventListener("wheel", e => { e.preventDefault(); const r = el.getBoundingClientRect(); yakinlas(e.deltaY < 0 ? 1.2 : 1 / 1.2, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+  el.addEventListener("dblclick", e => { const r = el.getBoundingClientRect(); yakinlas(2, e.clientX - r.left, e.clientY - r.top); });
+})();
+$("zArti").onclick = () => yakinlas(1.5);
+$("zEksi").onclick = () => yakinlas(1 / 1.5);
+$("zSifir").onclick = sigdir;
+window.addEventListener("resize", () => { if (!$("v-uydu").hidden) sigdir(); });
+document.addEventListener("fullscreenchange", () => setTimeout(sigdir, 100));
+
+$("tamEkranDugme").onclick = () => {
+  const el = $("gorus");
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  else if (el.requestFullscreen) el.requestFullscreen().catch(() => bildir("Bu tarayıcı tam ekranı desteklemiyor."));
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  else bildir("Bu tarayıcı tam ekranı desteklemiyor.");
+};
+$("yenileDugme").onclick = () => { if (KAYNAKLAR[durum.gorunum]) { oynaticiDurdur(); gorunumYukle(durum.gorunum, true); } };
+$("indirDugme").onclick = async () => {
+  if (!aktifSonuc) { bildir("İndirilecek görüntü yok."); return; }
+  const k = KAYNAKLAR[aktifSonuc.id];
+  const ad = k.uyduAdi(durum.secim[aktifSonuc.id]).replace(/[^\wçğıöşüÇĞİÖŞÜ-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  let zaman = "saat-bilinmiyor";
+  if (aktifSonuc.zaman) { const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(aktifSonuc.zaman).map(x => [x.type, x.value])); zaman = `${p.year}-${p.month}-${p.day}_${p.hour}-${p.minute}_TSI`; }
+  const uz = /\.png(\?|$)/.test(aktifSonuc.indir) ? "png" : "jpg";
+  const dosyaAdi = `${ad}_${zaman}.${uz}`;
+  try {
+    const c = await fetch(aktifSonuc.indir, { mode: "cors" });
+    if (!c.ok) throw new Error();
+    const blob = await c.blob();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = dosyaAdi;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    bildir("İndiriliyor: " + dosyaAdi);
+  } catch {
+    window.open(aktifSonuc.indir, "_blank", "noopener");
+    bildir("Görüntü yeni sekmede açıldı. Sağ tıklayıp (telefonda basılı tutup) \"Resmi kaydet\" seçin. Önerilen ad: " + dosyaAdi);
+  }
+};
+
+/* ===================== Zaman atlamalı oynatma ===================== */
+const oyna = { kareler: [], hazir: [], i: 0, hiz: 1, z: null };
+const HIZLAR = [{ ad: "Yavaş", d: .5 }, { ad: "Normal", d: 1 }, { ad: "Hızlı", d: 2.5 }];
+function hizlariCiz() {
+  $("hizlar").innerHTML = HIZLAR.map(h => `<button type="button" data-hiz="${h.d}" aria-pressed="${oyna.hiz === h.d}">${h.ad}</button>`).join("");
+}
+$("hizlar").onclick = e => { const b = e.target.closest("[data-hiz]"); if (!b) return; oyna.hiz = +b.dataset.hiz; hizlariCiz(); if (oyna.z) { oynaticiDurdur(); oynatBaslat(); } };
+function kareleriHazirla(liste) {
+  oynaticiDurdur();
+  oyna.kareler = liste || []; oyna.hazir = [];
+  const var_ = oyna.kareler.length > 1;
+  $("oynatDugme").disabled = !var_;
+  $("kareKaydir").disabled = true;
+  $("kareKaydir").max = Math.max(0, oyna.kareler.length - 1);
+  $("kareKaydir").value = $("kareKaydir").max;
+  $("kareBilgi").textContent = var_ ? "" : (liste === null ? "" : "Bu kaynak için geçmiş görüntü listesi alınamadı.");
+}
+async function kareleriYukle() {
+  $("kareBilgi").textContent = "Kareler yükleniyor…";
+  let biten = 0;
+  const sonuc = await Promise.all(oyna.kareler.map(k => resimDene(k.url, 25000).then(img => ({ ...k, img })).catch(() => null).finally(() => {
+    biten++; $("kareBilgi").textContent = `Kareler yükleniyor… ${biten}/${oyna.kareler.length}`;
+  })));
+  oyna.hazir = sonuc.filter(Boolean);
+  return oyna.hazir.length;
+}
+async function oynatBaslat() {
+  if (!oyna.hazir.length) {
+    $("oynatDugme").disabled = true;
+    const n = await kareleriYukle();
+    $("oynatDugme").disabled = false;
+    if (n < 2) { $("kareBilgi").textContent = "Geçmiş görüntüler şu an alınamadı."; return; }
+    $("kareKaydir").max = n - 1; oyna.i = 0;
+  }
+  $("kareKaydir").disabled = false;
+  $("oynatDugme").textContent = "⏸ Durdur";
+  const sure = 500 / oyna.hiz;
+  oyna.z = setInterval(() => { kareGoster(oyna.i); oyna.i = (oyna.i + 1) % oyna.hazir.length; }, sure);
+}
+function kareGoster(i) {
+  const k = oyna.hazir[i]; if (!k) return;
+  const kap = $("gorusIcerik"); kap.innerHTML = "";
+  const img = new Image(); img.src = k.img.src; img.alt = "Zaman atlamalı kare"; kap.appendChild(img);
+  if (gorus.gen !== k.img.naturalWidth) { gorus.gen = k.img.naturalWidth; gorus.yuk = k.img.naturalHeight; sigdir(); }
+  $("kareKaydir").value = i;
+  $("kareBilgi").textContent = `${kisaSaat(k.zaman)} (${i + 1}/${oyna.hazir.length})`;
+  zamanDamgasi(k.zaman);
+}
+function oynaticiDurdur() {
+  if (oyna.z) { clearInterval(oyna.z); oyna.z = null; }
+  const k = KAYNAKLAR[durum.gorunum];
+  $("oynatDugme").textContent = k && k.gecikmeli ? "▶ Dünya'nın dönüşünü oynat" : "▶ Son 3 saati oynat";
+}
+$("oynatDugme").onclick = () => { if (oyna.z) oynaticiDurdur(); else oynatBaslat(); };
+$("kareKaydir").oninput = e => { oynaticiDurdur(); oyna.i = +e.target.value; kareGoster(oyna.i); };
+
+/* ===================== Haritalar ===================== */
+const haritalar = {};
+const LEAFLET_VAR = typeof L !== "undefined";
+function haritaKur(id, secenek) {
+  const el = $(id);
+  if (!LEAFLET_VAR) { el.innerHTML = '<div class="harita-yok">Harita yüklenemedi. İnternet bağlantısını kontrol edin.</div>'; return null; }
+  const h = L.map(el, Object.assign({ worldCopyJump: true, minZoom: 1, zoomSnap: .5 }, secenek));
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 8, subdomains: "abc", attribution: "© OpenStreetMap" }).addTo(h);
+  return h;
+}
+function cember(enlem0, boylam0, yaricapDerece) {
+  const r = yaricapDerece * Math.PI / 180, f0 = enlem0 * Math.PI / 180, l0 = boylam0 * Math.PI / 180, nokta = [];
+  for (let a = 0; a <= 360; a += 4) {
+    const b = a * Math.PI / 180;
+    const f = Math.asin(Math.sin(f0) * Math.cos(r) + Math.cos(f0) * Math.sin(r) * Math.cos(b));
+    let l = l0 + Math.atan2(Math.sin(b) * Math.sin(r) * Math.cos(f0), Math.cos(r) - Math.sin(f0) * Math.sin(f));
+    nokta.push([Math.max(-82, Math.min(82, f * 180 / Math.PI)), l * 180 / Math.PI]);
+  }
+  return nokta;
+}
+const KAPSAMA = [
+  { ad: "Meteosat", boylam: 0, renk: "--c-met", git: "meteosat" },
+  { ad: "GOES-Doğu", boylam: AYARLAR.goes.dogu.boylam, renk: "--c-goesE", git: "goes", secim: { uydu: "dogu" } },
+  { ad: "GOES-Batı", boylam: AYARLAR.goes.bati.boylam, renk: "--c-goesW", git: "goes", secim: { uydu: "bati" } },
+  { ad: "Himawari-9", boylam: 140.7, renk: "--c-him", git: "himawari" }
+];
+const renkAl = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function kapsamaGit(k) { if (k.secim) Object.assign(durum.secim[k.git], k.secim); git(k.git); }
+function dunyaHaritasiKur() {
+  $("lejant").innerHTML = KAPSAMA.map((k, i) => `<button type="button" data-kapsama="${i}"><i style="background:var(${k.renk})"></i>${k.ad}</button>`).join("") +
+    `<button type="button" data-git="epic"><i style="background:var(--c-epic)"></i>NASA EPIC (Güneşli taraf)</button><button type="button" data-git="iss"><i style="background:var(--c-iss);border-radius:50%"></i>Uzay İstasyonu</button>`;
+  $("lejant").onclick = e => { const b = e.target.closest("[data-kapsama]"); if (b) kapsamaGit(KAPSAMA[+b.dataset.kapsama]); };
+  const h = haritaKur("dunyaHarita", { center: [25, 20], zoom: 1.5 });
+  if (!h) return;
+  haritalar.dunya = h;
+  KAPSAMA.forEach(k => {
+    const renk = renkAl(k.renk);
+    L.polygon(cember(0, k.boylam, 66), { color: renk, weight: 2, fillColor: renk, fillOpacity: .18 })
+      .addTo(h).bindTooltip(k.ad + " burayı görüyor — dokun", { sticky: true }).on("click", () => kapsamaGit(k));
+    L.circleMarker([0, k.boylam], { radius: 6, color: "#fff", weight: 2, fillColor: renk, fillOpacity: 1 }).addTo(h).bindTooltip(k.ad + " bu noktanın üstünde durur");
+  });
+}
+const issIkon = () => LEAFLET_VAR ? L.divIcon({ className: "", html: '<div class="iss-ikon" aria-label="Uzay istasyonu">🛰️</div>', iconSize: [28, 28], iconAnchor: [14, 14] }) : null;
+const issIzler = {};
+
+/* ===================== ISS ===================== */
+const issDurum = { konum: null, hata: false, iz: [], sonUlke: 0, ulke: "" };
+const bolgeAdlari = (() => { try { return new Intl.DisplayNames(["tr"], { type: "region" }); } catch { return null; } })();
+function okyanus(enlem, boylam) {
+  if (enlem > 66) return "Kuzey Buz Denizi";
+  if (enlem < -60) return "Güney Okyanusu";
+  if (boylam >= 20 && boylam < 120 && enlem < 25) return "Hint Okyanusu";
+  if (boylam >= 120 || boylam < -70 && enlem < 10 || boylam < -100) return enlem >= 0 ? "Kuzey Pasifik Okyanusu" : "Güney Pasifik Okyanusu";
+  if (boylam >= -100 && boylam < 20) return enlem >= 0 ? "Kuzey Atlantik Okyanusu" : "Güney Atlantik Okyanusu";
+  return "bir okyanus";
+}
+async function issGuncelle() {
+  try {
+    const v = await jsonAl(AYARLAR.iss.konumAdresi, 8000);
+    issDurum.konum = v; issDurum.hata = false;
+    issDurum.iz.push([v.latitude, v.longitude]); if (issDurum.iz.length > 120) issDurum.iz.shift();
+    if (Date.now() - issDurum.sonUlke > 30000) { issDurum.sonUlke = Date.now(); ulkeBul(v.latitude, v.longitude); }
+  } catch (e) { issDurum.hata = true; }
+  issCiz();
+}
+async function ulkeBul(enlem, boylam) {
+  try {
+    const v = await jsonAl(AYARLAR.iss.ulkeAdresi + enlem.toFixed(3) + "," + boylam.toFixed(3), 8000);
+    const kod = (v.country_code || "").toUpperCase();
+    issDurum.ulke = kod && kod !== "??" && bolgeAdlari ? bolgeAdlari.of(kod) + " üzerinde" : okyanus(enlem, boylam) + " üzerinde";
+  } catch { issDurum.ulke = okyanus(enlem, boylam) + " üzerinde (tahmini)"; }
+  issCiz();
+}
+function izParcala(iz) {
+  const parca = [[]];
+  iz.forEach((p, i) => { if (i && Math.abs(p[1] - iz[i - 1][1]) > 180) parca.push([]); parca[parca.length - 1].push(p); });
+  return parca;
+}
+function issCiz() {
+  const v = issDurum.konum;
+  const kz = $("kz-iss");
+  if (issDurum.hata && !v) { $("issNerede").textContent = "Konum şu an alınamıyor, birazdan tekrar denenecek."; if (kz) kz.textContent = "Konum şu an alınamıyor"; noktalariGuncelle(); return; }
+  if (!v) return;
+  const yer = issDurum.ulke || okyanus(v.latitude, v.longitude) + " üzerinde (tahmini)";
+  $("issNerede").textContent = yer;
+  $("tEnlem").textContent = v.latitude.toFixed(2) + "°";
+  $("tBoylam").textContent = v.longitude.toFixed(2) + "°";
+  $("tYuk").textContent = Math.round(v.altitude).toLocaleString("tr-TR") + " km";
+  $("tHiz").textContent = Math.round(v.velocity).toLocaleString("tr-TR") + " km/sa";
+  const gece = v.visibility === "eclipsed";
+  $("issGece").hidden = false;
+  $("issGece").textContent = gece ? "🌙 İstasyon şu an Dünya'nın gece tarafında. Aşağısı karanlık olduğu için video siyah görünebilir; şehir ışıklarını görebilirsin." : "☀️ İstasyon şu an Dünya'nın gündüz tarafında. Bulutları ve denizleri görebilirsin.";
+  $("issGuncel").textContent = (issDurum.hata ? "Son denemede ulaşılamadı · " : "") + "Konum: " + kisaSaat(new Date(v.timestamp * 1000)) + " (5 saniyede bir yenilenir)";
+  if (kz) kz.innerHTML = `${yer}<br>${gece ? "Gece tarafında" : "Gündüz tarafında"} · ${Math.round(v.velocity).toLocaleString("tr-TR")} km/sa`;
+  if (LEAFLET_VAR) {
+    for (const ad of ["dunya", "iss", "mini"]) {
+      const h = haritalar[ad]; if (!h) continue;
+      if (!issIzler[ad]) {
+        issIzler[ad] = { isaret: L.marker([v.latitude, v.longitude], { icon: issIkon(), interactive: ad === "dunya" }).addTo(h), cizgi: L.polyline([], { color: renkAl("--c-iss"), weight: 2, dashArray: "4 6" }).addTo(h) };
+        if (ad === "dunya") issIzler[ad].isaret.bindTooltip("Uzay İstasyonu — dokun, canlı videoyu aç").on("click", () => git("iss"));
+      }
+      issIzler[ad].isaret.setLatLng([v.latitude, v.longitude]);
+      issIzler[ad].cizgi.setLatLngs(izParcala(issDurum.iz));
+      if (ad !== "dunya") h.panTo([v.latitude, v.longitude], { animate: ad === "iss" });
+    }
+  }
+  noktalariGuncelle();
+}
+function issVideoAdres(yayin) {
+  const p = "autoplay=1&mute=1&rel=0&playsinline=1";
+  if (yayin.video) return `https://www.youtube.com/embed/${yayin.video}?${p}`;
+  return `https://www.youtube.com/embed/live_stream?channel=${yayin.kanal}&${p}`;
+}
+let aktifYayin = 0;
+function issYayinListesi() {
+  const l = [];
+  if (AYARLAR.iss.youtubeVideo) l.push({ ad: "ISS canlı yayını", video: AYARLAR.iss.youtubeVideo });
+  return l.concat(AYARLAR.iss.yayinlar);
+}
+function issSayfasiAc() {
+  const yayinlar = issYayinListesi();
+  $("issYayinlar").innerHTML = yayinlar.length > 1 ? yayinlar.map((y, i) => `<button type="button" data-yayin="${i}" aria-pressed="${i === aktifYayin}">${y.ad}</button>`).join("") : "";
+  $("issYayinlar").onclick = e => { const b = e.target.closest("[data-yayin]"); if (!b) return; aktifYayin = +b.dataset.yayin; issSayfasiAc(); };
+  $("issYoutubeLink").href = AYARLAR.iss.yayinlarSayfasi;
+  const kutu = $("videoKutu");
+  const src = issVideoAdres(yayinlar[aktifYayin] || yayinlar[0]);
+  const mevcut = kutu.querySelector("iframe");
+  if (!mevcut || mevcut.src !== src) kutu.innerHTML = `<iframe src="${src}" title="Uzay istasyonundan canlı video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  if (!haritalar.iss) { haritalar.iss = haritaKur("issHarita", { center: [0, 0], zoom: 2, zoomControl: true }); }
+  setTimeout(() => { haritalar.iss && haritalar.iss.invalidateSize(); issCiz(); }, 60);
+}
+function issVideoKapat() { $("videoKutu").innerHTML = ""; }
+
+/* ===================== Zamanlayıcılar ===================== */
+let issZ = null, yenileZ = null;
+function zamanlayicilariBaslat() {
+  if (!issZ) { issGuncelle(); issZ = setInterval(issGuncelle, AYARLAR.issKonumSaniye * 1000); }
+  if (!yenileZ) yenileZ = setInterval(() => {
+    tumunuYukle();
+    if (KAYNAKLAR[durum.gorunum] && !oyna.z) gorunumYukle(durum.gorunum, false);
+  }, Math.max(10, AYARLAR.yenilemeDakika) * DK);
+}
+function zamanlayicilariDurdur() { clearInterval(issZ); issZ = null; clearInterval(yenileZ); yenileZ = null; }
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { zamanlayicilariDurdur(); oynaticiDurdur(); }
+  else { zamanlayicilariBaslat(); tumunuYukle(); }
+});
+setInterval(() => {
+  $("saat").textContent = new Date().toLocaleTimeString("tr-TR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }) + " TSİ";
+  // "X dakika önce" yazılarını tazele
+  for (const id in KAYNAKLAR) if (durum.sonuc[id]) kartGuncelle(id);
+  if (aktifSonuc && KAYNAKLAR[durum.gorunum] && !oyna.z) bilgileriYaz(durum.gorunum, aktifSonuc, false);
+}, 30000);
+
+/* ===================== Alt bilgi ===================== */
+$("kaynakListe").innerHTML = [
+  ["NASA – Uluslararası Uzay İstasyonu canlı yayını (YouTube)", AYARLAR.iss.yayinlarSayfasi],
+  ["Where the ISS at? – ISS konum servisi", "https://wheretheiss.at/"],
+  ["EUMETSAT – EUMETView (Meteosat)", AYARLAR.meteosat.resmiSite],
+  ["NOAA / NESDIS STAR – GOES görüntüleri", AYARLAR.goes.resmiSite],
+  ["CIRA / RAMMB SLIDER – Himawari-9 (JMA)", AYARLAR.himawari.resmiSite],
+  ["NICT – Himawari gerçek zamanlı (yedek)", "https://himawari8.nict.go.jp/"],
+  ["NASA – EPIC (DSCOVR)", AYARLAR.epic.resmiSite],
+  ["OpenStreetMap – harita", "https://www.openstreetmap.org/copyright"]
+].map(([a, u]) => `<li><a href="${u}" target="_blank" rel="noopener">${a}</a></li>`).join("");
+
+/* ===================== Başlat ===================== */
+function baslat() {
+  $("saat").textContent = new Date().toLocaleTimeString("tr-TR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }) + " TSİ";
+  kartlariCiz();
+  $("bilgiKosesi").innerHTML = BILGI.map(b => `<article class="bilgi" style="--renk:var(${b.renk})"><h3>${b.ad}</h3><div class="mesafe">${b.mesafe}</div><p>${b.metin}</p></article>`).join("");
+  hizlariCiz();
+  dunyaHaritasiKur();
+  haritalar.mini = haritaKur("issMini", { center: [0, 0], zoom: 1, zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, touchZoom: false, boxZoom: false, keyboard: false, attributionControl: false });
+  let ilk = depo.al("ucd-sekme");
+  if (!ilk || !SEKMELER.some(s => s.id === ilk)) ilk = "meteosat";   // ilk açılışta Türkiye'yi gösteren Meteosat
+  git(ilk);
+  tumunuYukle();
+  zamanlayicilariBaslat();
+}
+baslat();
+</script>
+</body>
+</html>
