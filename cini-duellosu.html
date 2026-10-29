@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0d1b2a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Çini Düellosu</title>
+<style>
+:root{
+  --bg:#0d1b2a;--bg2:#13263b;--gold:#d4a537;--gold2:#f3d27a;--ink:#f4ead5;--mute:#9fb0c2;
+  --p:#178f94;--p2:#22b8bd;--o:#a8324a;--o2:#d24d68;
+  --cell:min(27vw,14.2vh,128px);--hc:min(17vw,9.6vh,84px);
+  --star:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cg fill='none' stroke='%23d4a537' stroke-opacity='.13'%3E%3Crect x='12' y='12' width='20' height='20'/%3E%3Crect x='12' y='12' width='20' height='20' transform='rotate(45 22 22)'/%3E%3Ccircle cx='22' cy='22' r='4'/%3E%3C/g%3E%3C/svg%3E");
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg) var(--star);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;touch-action:manipulation}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+section{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;padding:max(12px,env(safe-area-inset-top)) 16px max(12px,env(safe-area-inset-bottom));overflow-y:auto}
+section.on{display:flex}
+.btn{display:block;width:min(100%,340px);padding:15px 18px;margin:7px auto;border-radius:14px;background:linear-gradient(180deg,#1d3a57,#152c44);border:1.5px solid rgba(212,165,55,.55);font-size:18px;font-weight:700;letter-spacing:.3px;box-shadow:0 4px 0 #081422;transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #081422}
+.btn.main{background:linear-gradient(180deg,#e2b94f,#b8892a);color:#1a1205;border-color:#f6dc8f;box-shadow:0 4px 0 #7a5a17}
+.btn small{display:block;font-size:12px;font-weight:500;opacity:.75;margin-top:2px}
+.bism{font-family:Georgia,serif;color:var(--gold2);opacity:.85;font-size:15px;margin-top:8px;text-align:center}
+.logo{margin:18px 0 4px;text-align:center}
+.logo .em{font-size:64px;filter:drop-shadow(0 4px 10px rgba(212,165,55,.4))}
+.logo h1{font-family:Georgia,serif;font-size:38px;color:var(--gold2);letter-spacing:1px;text-shadow:0 2px 0 #4a3510}
+.logo p{color:var(--mute);font-size:14px;margin-top:4px}
+.stats{display:flex;gap:10px;justify-content:center;margin:14px 0 8px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.06);border:1px solid rgba(212,165,55,.3);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600}
+.top{width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.top h2{font-family:Georgia,serif;color:var(--gold2);font-size:22px;flex:1;text-align:center}
+.ib{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(212,165,55,.35);font-size:20px;display:grid;place-items:center;flex:none}
+.wrap{width:100%;max-width:520px}
+
+/* Kart */
+.card{position:relative;width:100%;height:100%;border-radius:11%;overflow:hidden;border:2px solid rgba(255,255,255,.25);box-shadow:0 3px 8px rgba(0,0,0,.45),inset 0 0 0 3px rgba(0,0,0,.12);background-size:30px 30px;transform-style:preserve-3d}
+.card.p{background:var(--star),linear-gradient(160deg,var(--p2),var(--p) 60%,#0d5f63)}
+.card.o{background:var(--star),linear-gradient(160deg,var(--o2),var(--o) 60%,#6e1a2c)}
+.card.n{background:var(--star),linear-gradient(160deg,#36506b,#22384f)}
+.card.t3{border-color:#c7d3de}.card.t4{border-color:var(--gold)}.card.t5{border-color:var(--gold2);box-shadow:0 0 10px rgba(243,210,122,.6),0 3px 8px rgba(0,0,0,.45)}
+.card .n{position:absolute;font-style:normal;font-weight:900;color:#fff;text-shadow:0 1px 0 #000,0 0 3px #000;font-size:calc(var(--sz,1)*15px);line-height:1}
+.card .nt{top:5%;left:50%;transform:translateX(-50%)}
+.card .nb{bottom:5%;left:50%;transform:translateX(-50%)}
+.card .nl{left:7%;top:50%;transform:translateY(-50%)}
+.card .nr{right:7%;top:50%;transform:translateY(-50%)}
+.card .ic{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);font-size:calc(var(--sz,1)*30px);line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+.card .nm{position:absolute;left:0;right:0;bottom:22%;text-align:center;text-decoration:none;font-size:calc(var(--sz,1)*8.5px);font-weight:700;color:rgba(255,255,255,.92);text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden}
+.card.flip{animation:flip .46s ease-in-out}
+@keyframes flip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg) scale(1.08)}100%{transform:rotateY(0)}}
+.card.drop{animation:drop .28s ease-out}
+@keyframes drop{0%{transform:scale(1.25);opacity:.4}100%{transform:scale(1);opacity:1}}
+.card.lock{filter:grayscale(1) brightness(.45)}
+
+/* Oyun */
+#game{justify-content:space-between;padding-left:8px;padding-right:8px;overflow:hidden}
+.ghead{width:100%;max-width:520px;display:flex;align-items:center;gap:8px}
+.ghead .ttl{flex:1;text-align:center;font-weight:700;font-size:15px}
+.ghead .ttl small{display:block;color:var(--gold2);font-size:12px;font-weight:600}
+.hand{display:flex;gap:min(1.6vw,8px);justify-content:center;min-height:calc(var(--hc)*1.15 + 10px);align-items:center}
+.hand .slot{width:var(--hc);height:calc(var(--hc)*1.15);--sz:.78;transition:transform .15s}
+.hand.me .slot.sel{transform:translateY(-12px) scale(1.06)}
+.hand.me .slot.sel .card{box-shadow:0 0 0 3px var(--gold2),0 8px 16px rgba(0,0,0,.5)}
+.hand.ai .slot.think{transform:translateY(10px) scale(1.06)}
+.hand.dim{opacity:.55}
+.scorebar{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px}
+.scorebar .s{min-width:44px;text-align:center;padding:5px 10px;border-radius:10px}
+.scorebar .s.p{background:var(--p)}.scorebar .s.o{background:var(--o)}
+#turn{font-size:13px;color:var(--mute);min-width:110px;text-align:center}
+.board{display:grid;grid-template-columns:repeat(3,var(--cell));grid-template-rows:repeat(3,calc(var(--cell)*1.12));gap:6px;padding:8px;border-radius:16px;background:rgba(0,0,0,.25);border:2px solid rgba(212,165,55,.45);box-shadow:inset 0 0 30px rgba(0,0,0,.4);perspective:600px}
+.cell{border-radius:11%;background:rgba(255,255,255,.04);border:1.5px dashed rgba(212,165,55,.25);--sz:1.12;position:relative}
+.cell.can{border-color:var(--gold2);background:rgba(243,210,122,.1);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{background:rgba(243,210,122,.2)}}
+.cell.last .card{box-shadow:0 0 0 2px #fff,0 3px 8px rgba(0,0,0,.45)}
+#pop{position:fixed;left:50%;top:45%;transform:translate(-50%,-50%) scale(0);font-family:Georgia,serif;font-weight:900;font-size:44px;color:var(--gold2);text-shadow:0 3px 0 #5a3d0a,0 0 18px rgba(243,210,122,.8);pointer-events:none;z-index:50}
+#pop.go{animation:pop .9s ease-out}
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}25%{transform:translate(-50%,-50%) scale(1.15);opacity:1}70%{opacity:1}100%{transform:translate(-50%,-80%) scale(1);opacity:0}}
+.hint{font-size:12.5px;color:var(--gold2);text-align:center;max-width:340px;min-height:18px}
+
+/* Harita */
+.chap{margin:12px 0 6px;padding:12px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid rgba(212,165,55,.25)}
+.chap h3{font-family:Georgia,serif;color:var(--gold2);font-size:19px}
+.chap p{font-size:12.5px;color:var(--mute);margin:3px 0 10px}
+.lv{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.lvb{aspect-ratio:1;border-radius:14px;background:linear-gradient(180deg,#1d3a57,#13283e);border:1.5px solid rgba(212,165,55,.45);font-weight:800;font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.lvb .st{font-size:10px;letter-spacing:-1px;color:var(--gold2)}
+.lvb.done{background:linear-gradient(180deg,#1f6d70,#14484b)}
+.lvb.next{background:linear-gradient(180deg,#e2b94f,#b8892a);color:#1a1205;animation:pulse2 1.4s infinite}
+@keyframes pulse2{50%{box-shadow:0 0 14px rgba(243,210,122,.8)}}
+.lvb.lk{opacity:.35}
+
+/* Koleksiyon */
+.deckrow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px;border-radius:14px;background:rgba(0,0,0,.25);border:1.5px solid rgba(212,165,55,.45)}
+.deckrow .slot,.coll .slot{aspect-ratio:1/1.15;--sz:.8}
+.deckrow .empty{border-radius:11%;border:1.5px dashed rgba(212,165,55,.35);display:grid;place-items:center;color:var(--mute);font-size:22px}
+.coll{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.coll .slot{position:relative}
+.coll .slot.indeck::after{content:"✓";position:absolute;top:-5px;right:-5px;width:22px;height:22px;border-radius:50%;background:var(--gold);color:#1a1205;font-weight:900;font-size:13px;display:grid;place-items:center}
+.coll .price{position:absolute;left:50%;top:-8px;transform:translateX(-50%);white-space:nowrap;padding:2px 8px;border-radius:999px;background:#1a1205;border:1px solid var(--gold);font-size:11.5px;font-weight:800;color:var(--gold2)}
+.coll{row-gap:14px;padding-top:6px}
+.sub{color:var(--mute);font-size:13px;margin:12px 0 2px}
+
+/* Modal */
+#modal{position:fixed;inset:0;background:rgba(5,10,18,.78);display:none;align-items:center;justify-content:center;z-index:40;padding:16px;backdrop-filter:blur(3px)}
+#modal.on{display:flex}
+.mbox{width:min(100%,380px);max-height:92vh;overflow-y:auto;background:var(--bg2) var(--star);border:2px solid var(--gold);border-radius:20px;padding:20px 18px;text-align:center;animation:mIn .25s ease-out}
+@keyframes mIn{from{transform:scale(.85);opacity:0}}
+.mbox h2{font-family:Georgia,serif;color:var(--gold2);font-size:26px;margin-bottom:6px}
+.mbox p{font-size:15px;line-height:1.5;color:var(--ink);margin:8px 0}
+.mbox .big{width:150px;height:172px;margin:12px auto;--sz:1.5}
+.mbox .fact{background:rgba(0,0,0,.25);border-left:3px solid var(--gold);padding:10px 12px;border-radius:8px;text-align:left;font-size:14px}
+.stars3{font-size:40px;letter-spacing:4px;margin:6px 0}
+.stars3 .off{opacity:.2}
+.rules{text-align:left}
+.rules li{margin:8px 0 8px 18px;font-size:14.5px;line-height:1.45}
+.mini{display:inline-block;width:56px;height:64px;--sz:.6;vertical-align:middle}
+.toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);background:#000c;border:1px solid var(--gold);padding:10px 16px;border-radius:12px;font-size:14px;z-index:60;display:none}
+</style>
+</head>
+<body>
+
+<!-- ANA MENÜ -->
+<section id="home" class="on">
+  <div class="bism">بسم الله الرحمن الرحيم<br><small style="font-size:12px;opacity:.8">Bismillâhirrahmânirrahîm</small></div>
+  <div class="logo"><div class="em">🕌</div><h1>Çini Düellosu</h1><p>İslam medeniyeti strateji kart oyunu</p></div>
+  <div class="stats" id="hStats"></div>
+  <button class="btn main" id="bPlay">▶ Oyna<small id="bPlaySub"></small></button>
+  <button class="btn" id="bDaily">🌙 Günün Düellosu<small id="bDailySub"></small></button>
+  <button class="btn" id="bDeck">🎴 Kartlarım ve Destem</button>
+  <button class="btn" id="bHow">📖 Nasıl Oynanır?</button>
+  <button class="btn" id="bSet">⚙️ Ayarlar</button>
+</section>
+
+<!-- HARİTA -->
+<section id="map">
+  <div class="top"><button class="ib" data-go="home">←</button><h2>Yolculuk</h2><div class="ib" style="width:auto;padding:0 10px;font-size:14px;font-weight:700" id="mWallet"></div></div>
+  <div class="wrap" id="mapList"></div>
+</section>
+
+<!-- DESTE -->
+<section id="deck">
+  <div class="top"><button class="ib" data-go="home">←</button><h2>Kartlarım</h2><div class="ib" style="width:auto;padding:0 10px;font-size:14px;font-weight:700" id="dWallet"></div></div>
+  <div class="wrap">
+    <div class="sub">Destem (5 kart) — karta dokunup çıkarabilirsin</div>
+    <div class="deckrow" id="deckRow"></div>
+    <div class="sub" id="collInfo"></div>
+    <div class="coll" id="coll"></div>
+    <div style="height:20px"></div>
+  </div>
+</section>
+
+<!-- OYUN -->
+<section id="game">
+  <div class="ghead"><button class="ib" id="gBack">✕</button><div class="ttl" id="gTitle"></div><button class="ib" id="gHelp">?</button></div>
+  <div class="hand ai" id="handO"></div>
+  <div class="scorebar"><span class="s p" id="sP">5</span><span id="turn"></span><span class="s o" id="sO">5</span></div>
+  <div class="board" id="board"></div>
+  <div class="hint" id="hint"></div>
+  <div class="hand me" id="handP"></div>
+</section>
+
+<div id="pop"></div>
+<div id="modal"><div class="mbox" id="mbox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+// ---------- KARTLAR ----------
+// v: [üst, sağ, alt, sol]  (10 = A)
+const CARDS=[
+ {id:1,n:"Buğday",e:"🌾",t:1,v:[2,4,3,4],f:"Kur'an'da, yedi başak veren ve her başağında yüz tane bulunan bir tane örneği verilir (Bakara 261)."},
+ {id:2,n:"Su",e:"💧",t:1,v:[4,2,5,2],f:"\"Her canlı şeyi sudan meydana getirdik.\" (Enbiyâ 30)"},
+ {id:3,n:"Zeytin",e:"🫒",t:1,v:[3,5,2,3],f:"Tîn suresi incir ve zeytine yemin ederek başlar."},
+ {id:4,n:"Üzüm",e:"🍇",t:1,v:[5,2,2,5],f:"Kur'an'da cennet nimetleri anlatılırken üzüm bağları da anılır (Nebe 32)."},
+ {id:6,n:"Hurma",e:"🌴",t:1,v:[4,4,3,2],f:"Peygamber Efendimiz (s.a.v.) orucu hurma ile açmayı tavsiye etmiştir."},
+ {id:7,n:"Testi",e:"🏺",t:1,v:[5,3,4,2],f:"Topraktan yapılan testiler suyu doğal yolla serin tutar; Osmanlı evlerinin vazgeçilmeziydi."},
+ {id:8,n:"Kum Saati",e:"⏳",t:1,v:[2,5,4,3],f:"Asr suresi zamana yemin eder; zaman, insanın en kıymetli sermayesidir."},
+ {id:5,n:"Kahve",e:"☕",t:1,v:[2,3,5,4],f:"Kahve 16. yüzyılda Yemen'den İstanbul'a geldi; Türk kahvesi bugün UNESCO listesindedir."},
+ {id:9,n:"Bal",e:"🍯",t:2,v:[6,3,2,6],f:"Nahl suresinde, balda insanlar için şifa olduğu bildirilir (Nahl 69)."},
+ {id:10,n:"Gül",e:"🌹",t:2,v:[3,6,6,2],f:"Osmanlı sanatında gül, Peygamber Efendimiz'i (s.a.v.) simgeleyen sevilen bir motiftir."},
+ {id:11,n:"Lale",e:"🌷",t:2,v:[6,5,3,3],f:"Lale, çinilerden kumaşlara kadar Osmanlı sanatının en sevilen motiflerinden biridir."},
+ {id:12,n:"Selvi",e:"🌲",t:2,v:[7,2,6,3],f:"Dik ve hep yeşil duruşuyla selvi, Osmanlı bahçe ve sanatında sebatın simgesidir."},
+ {id:13,n:"Kandil",e:"🪔",t:2,v:[4,6,2,6],f:"Süleymaniye'de kandillerin isi bir odada toplanır, ondan mürekkep yapılırdı."},
+ {id:14,n:"Hilal",e:"🌙",t:2,v:[5,5,5,3],f:"Hicri aylar, yeni hilalin görülmesiyle başlar."},
+ {id:15,n:"Pusula",e:"🧭",t:2,v:[2,7,4,5],f:"Müslüman denizciler ve âlimler yön ve kıble tayini için pusuladan faydalandı."},
+ {id:16,n:"Fener",e:"🏮",t:2,v:[5,3,7,3],f:"Ramazan'da sokakları fenerlerle süslemek pek çok Müslüman ülkede güzel bir gelenektir."},
+ {id:17,n:"Çini",e:"💠",t:3,v:[7,6,3,5],f:"İznik çinileri, 16. yüzyılda kendine özgü mercan kırmızısıyla zirveye ulaştı."},
+ {id:18,n:"Ebru",e:"🎨",t:3,v:[4,7,7,3],f:"Su üzerine serpilen boyalarla yapılan ebru sanatı UNESCO listesinde yer alır."},
+ {id:19,n:"Hat",e:"🖋️",t:3,v:[6,4,7,4],f:"Hat sanatı, Kur'an'ı en güzel şekilde yazma gayretiyle gelişti."},
+ {id:20,n:"Yıldız",e:"⭐",t:3,v:[3,8,3,7],f:"\"Yıldızlarla da yollarını bulurlar.\" (Nahl 16)"},
+ {id:21,n:"Güneş",e:"☀️",t:3,v:[8,4,5,5],f:"Namaz vakitleri güneşin gökyüzündeki hareketine göre belirlenir."},
+ {id:22,n:"Şadırvan",e:"⛲",t:3,v:[5,5,8,4],f:"Şadırvan, cami avlularında abdest almak için yapılan çok musluklu çeşmedir."},
+ {id:23,n:"Gemi",e:"⛵",t:3,v:[7,3,6,6],f:"Piri Reis'in Kitâb-ı Bahriye'si, Akdeniz için yazılmış ayrıntılı bir denizcilik rehberidir."},
+ {id:24,n:"Harita",e:"🗺️",t:3,v:[6,7,2,7],f:"Piri Reis 1513'te, Amerika kıyılarını da gösteren ünlü dünya haritasını çizdi."},
+ {id:25,n:"Rasathane",e:"🔭",t:4,v:[8,6,4,7],f:"Takiyüddin, 1577'de İstanbul'da gökyüzünü incelemek için bir rasathane kurdu."},
+ {id:26,n:"Kitap",e:"📚",t:4,v:[7,8,7,3],f:"Bağdat'taki Beytü'l-Hikme, kitapların tercüme edilip incelendiği büyük bir ilim merkeziydi."},
+ {id:27,n:"Şifa",e:"🌿",t:4,v:[5,7,8,5],f:"İbn-i Sina'nın El-Kânûn fi't-Tıb kitabı yüzyıllarca tıp okullarında okutuldu."},
+ {id:28,n:"Cebir",e:"🔢",t:4,v:[9,4,6,7],f:"\"Cebir\" kelimesi Harezmî'nin kitabının adından, \"algoritma\" ise onun isminden gelir."},
+ {id:29,n:"Kervansaray",e:"🏛️",t:4,v:[6,9,5,6],f:"Selçuklu kervansarayları, ticaret yollarındaki yolculara güvenli konaklama sağlardı."},
+ {id:30,n:"Su Saati",e:"⚙️",t:4,v:[8,8,3,7],f:"El-Cezerî, 12. yüzyılda suyla çalışan otomatik saatler ve makineler tasarladı."},
+ {id:31,n:"Mahya",e:"✨",t:5,v:[9,7,6,7],f:"Ramazan'da iki minare arasına kandillerle yazı yazma, yani mahya, İstanbul'a özgü bir gelenektir."},
+ {id:32,n:"Bahçe",e:"🌳",t:5,v:[7,9,8,5],f:"Osmanlı bahçeleri lale, gül ve selvilerle cennet tasavvuruna göre düzenlenirdi."},
+ {id:33,n:"Selimiye",e:"🕌",t:5,v:[10,7,7,7],f:"Mimar Sinan, Edirne'deki Selimiye Camii'ni \"ustalık eserim\" olarak nitelendirmiştir."},
+];
+const C=Object.fromEntries(CARDS.map(c=>[c.id,c]));
+const STARTER=[1,2,3,4,6,7,8];
+const PRICE={1:5,2:10,3:18,4:28,5:40};
+// Her durağın ödül kartı (ilk galibiyette). null = bonus yıldız
+const REWARD=[5,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,null,null,32,null,null,33];
+const CHAPTERS=[
+ {n:"Bursa",e:"🌳",d:"Temel kural: Komşu kartla değen sayın büyükse, o kart senin olur.",rules:{}},
+ {n:"Edirne",e:"🕌",d:"Yeni kural — AYNI: Kartının iki ya da daha fazla kenarı komşularla eşitse, rakibin o kartları senin olur!",rules:{same:1}},
+ {n:"İstanbul",e:"🌙",d:"Yeni kural — TOPLAM: İki kenarın toplamları eşitse o kartlar da senin olur. Ayrıca AYNI kuralı devam eder.",rules:{same:1,plus:1}},
+];
+
+// ---------- KAYIT ----------
+const KEY="cini-duellosu-v1";
+const defSave=()=>({own:STARTER.slice(),deck:[1,2,3,4,6],lv:{},wallet:0,daily:{last:"",streak:0},sound:1,seen:{},matches:0,wins:0});
+let S;
+try{S=Object.assign(defSave(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=defSave()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+// ---------- YARDIMCILAR ----------
+const $=id=>document.getElementById(id);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const hash=s=>{let h=2166136261;for(const ch of s)h=Math.imul(h^ch.charCodeAt(0),16777619);return h>>>0};
+let AC;
+function tone(f,d=.09,type="sine",vol=.07,delay=0){
+  if(!S.sound)return;
+  try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const t=AC.currentTime+delay;const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d)}catch(e){}
+}
+const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display="none",2200)}
+function cardHTML(c,o,cls=""){const v=c.v.map(x=>x===10?"A":x);return `<div class="card ${o} t${c.t} ${cls}"><i class="n nt">${v[0]}</i><i class="n nr">${v[1]}</i><i class="n nb">${v[2]}</i><i class="n nl">${v[3]}</i><b class="ic">${c.e}</b><s class="nm">${c.n}</s></div>`}
+function show(id){document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id===id));if(id==="home")renderHome();if(id==="map")renderMap();if(id==="deck")renderDeck()}
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{tone(500,.05);show(b.dataset.go)});
+function modal(html){$("mbox").innerHTML=html;$("modal").classList.add("on")}
+function closeModal(){$("modal").classList.remove("on")}
+function starsStr(n){return [0,1,2].map(i=>i<n?"★":"☆").join("")}
+
+// ---------- OYUN MOTORU ----------
+function nbrs(i){const r=[],row=i/3|0,col=i%3;if(row>0)r.push([i-3,0,2]);if(col<2)r.push([i+1,1,3]);if(row<2)r.push([i+3,2,0]);if(col>0)r.push([i-1,3,1]);return r}
+function place(board,i,card,owner,rules){
+  const b=board.slice();b[i]={c:card,o:owner};
+  const steps=[],v=card.v,ns=nbrs(i).filter(([j])=>b[j]);
+  const flip=(list,kind)=>{const s=[];for(const j of list)if(b[j].o!==owner){b[j]={c:b[j].c,o:owner};s.push(j)}if(s.length)steps.push({kind,cells:s});return s};
+  const combo=[];
+  if(rules.same){const m=ns.filter(([j,a,t])=>v[a]===b[j].c.v[t]).map(x=>x[0]);if(m.length>=2)combo.push(...flip(m,"AYNI!"))}
+  if(rules.plus){const sums={};for(const [j,a,t] of ns){const s=v[a]+b[j].c.v[t];(sums[s]=sums[s]||[]).push(j)}const m=[];for(const k in sums)if(sums[k].length>=2)m.push(...sums[k]);if(m.length)combo.push(...flip(m,"TOPLAM!"))}
+  flip(ns.filter(([j,a,t])=>b[j].o!==owner&&v[a]>b[j].c.v[t]).map(x=>x[0]),"");
+  const q=combo.slice();
+  while(q.length){const k=q.shift(),kv=b[k].c.v;const s=flip(nbrs(k).filter(([j,a,t])=>b[j]&&b[j].o!==owner&&kv[a]>b[j].c.v[t]).map(x=>x[0]),"KOMBO!");q.push(...s)}
+  return {b,steps};
+}
+function heur(b){
+  let s=0;
+  for(let i=0;i<9;i++){const x=b[i];if(!x)continue;const sg=x.o==="o"?1:-1;s+=sg;
+    for(const [j,a] of nbrs(i))if(!b[j])s+=sg*.035*x.c.v[a];}
+  return s;
+}
+function search(b,hO,hP,turn,d,rules,al,be){
+  const empty=[];for(let i=0;i<9;i++)if(!b[i])empty.push(i);
+  if(d===0||!empty.length)return heur(b);
+  const hand=turn==="o"?hO:hP;const seen=new Set();
+  let best=turn==="o"?-1e9:1e9;
+  for(let k=0;k<hand.length;k++){
+    if(seen.has(hand[k].id))continue;seen.add(hand[k].id);
+    const nh=hand.slice();nh.splice(k,1);
+    for(const i of empty){
+      const r=place(b,i,hand[k],turn,rules);
+      if(turn==="o"){const s=search(r.b,nh,hP,"p",d-1,rules,al,be);if(s>best)best=s;if(best>al)al=best}
+      else{const s=search(r.b,hO,nh,"o",d-1,rules,al,be);if(s<best)best=s;if(best<be)be=best}
+      if(al>=be)return best;
+    }
+  }
+  return best;
+}
+function aiMove(){
+  const b=G.board,hO=G.hands.o,hP=G.hands.p;const moves=[];
+  const empty=[];for(let i=0;i<9;i++)if(!b[i])empty.push(i);
+  for(let k=0;k<hO.length;k++){const nh=hO.slice();nh.splice(k,1);
+    for(const i of empty){const r=place(b,i,hO[k],"o",G.rules);moves.push({k,i,s:search(r.b,nh,hP,"p",G.depth-1,G.rules,-1e9,1e9)})}}
+  if(Math.random()<G.noise)return moves[Math.random()*moves.length|0];
+  const top=Math.max(...moves.map(m=>m.s));const best=moves.filter(m=>m.s>=top-1e-6);
+  return best[Math.random()*best.length|0];
+}
+
+// ---------- MAÇ ----------
+let G=null,busy=false,sel=-1;
+function oppDeck(level){
+  const r=rng(level*7919+13),t=1+(level-1)*3.6/29,lo=Math.floor(t),fr=t-lo,out=[];
+  while(out.length<5){const tier=Math.min(5,r()<fr?lo+1:lo);const pool=CARDS.filter(c=>c.t===tier);out.push(pool[r()*pool.length|0])}
+  return out;
+}
+function startLevel(L){
+  const ch=Math.min(2,(L-1)/10|0);
+  if(!S.seen["ch"+ch]&&ch>0){S.seen["ch"+ch]=1;save();
+    modal(`<h2>${CHAPTERS[ch].e} ${CHAPTERS[ch].n}</h2><p>${CHAPTERS[ch].d}</p>${ch===1?ruleSameDemo():ruleSumDemo()}<button class="btn main" id="mOk">Anladım</button>`);
+    $("mOk").onclick=()=>{closeModal();startLevel(L)};return}
+  const depth=L<=3?1:L<=12?2:3,noise=L<=2?.4:L<=5?.2:L<=10?.08:L<=16?.03:0;
+  startMatch({mode:"lv",L,title:`${CHAPTERS[ch].e} ${CHAPTERS[ch].n} · Durak ${L}`,rules:CHAPTERS[ch].rules,opp:oppDeck(L),depth,noise});
+}
+function startDaily(){
+  const d=today();
+  const r=rng(hash(d)),opp=[];
+  for(let k=0;k<5;k++){const tier=r()<.55?3:4;const pool=CARDS.filter(c=>c.t===tier);opp.push(pool[r()*pool.length|0])}
+  const rv=r(),rules=rv<.33?{}:rv<.66?{same:1}:{same:1,plus:1};
+  startMatch({mode:"daily",title:"🌙 Günün Düellosu",rules,opp,depth:3,noise:0});
+}
+function startMatch(o){
+  if(S.deck.length<5){toast("Destende 5 kart olmalı");show("deck");return}
+  G={...o,board:Array(9).fill(null),hands:{p:S.deck.map(id=>C[id]),o:o.opp.slice()},last:-1};
+  G.turn=(S.matches===0||S.matches%2===0)?"p":"o";
+  sel=-1;busy=false;
+  const rn=[o.rules.same?"Aynı":"",o.rules.plus?"Toplam":""].filter(Boolean).join(" + ");
+  $("gTitle").innerHTML=`${o.title}<small>${rn?"Kurallar: Temel + "+rn:"Kurallar: Temel"}</small>`;
+  show("game");renderGame();
+  if(G.turn==="o")aiTurn();
+}
+function scores(){let p=G.hands.p.length,o=G.hands.o.length;for(const x of G.board)if(x)x.o==="p"?p++:o++;return{p,o}}
+function renderGame(){
+  const sc=scores();$("sP").textContent=sc.p;$("sO").textContent=sc.o;
+  $("turn").textContent=G.turn==="p"?"▼ Senin sıran":"▲ Rakip düşünüyor…";
+  $("handO").innerHTML=G.hands.o.map((c,k)=>`<div class="slot" data-k="${k}">${cardHTML(c,"o")}</div>`).join("");
+  $("handP").innerHTML=G.hands.p.map((c,k)=>`<div class="slot ${k===sel?"sel":""}" data-k="${k}">${cardHTML(c,"p")}</div>`).join("");
+  $("handO").classList.toggle("dim",G.turn==="p");$("handP").classList.toggle("dim",G.turn!=="p");
+  $("board").innerHTML=G.board.map((x,i)=>`<div class="cell ${!x&&sel>=0&&G.turn==="p"?"can":""} ${i===G.last?"last":""}" data-i="${i}">${x?cardHTML(x.c,x.o):""}</div>`).join("");
+  let h="";
+  if(G.mode==="lv"&&G.L===1&&S.matches===0){h=G.turn!=="p"?"":sel<0?"👇 Aşağıdan bir kart seç":"Şimdi tahtada boş bir kareye dokun";}
+  $("hint").textContent=h;
+}
+$("handP").onclick=e=>{const s=e.target.closest(".slot");if(!s||busy||G.turn!=="p")return;const k=+s.dataset.k;sel=sel===k?-1:k;tone(660,.05);buzz(8);renderGame()};
+$("handO").onclick=e=>{const s=e.target.closest(".slot");if(!s)return;cardInfo(G.hands.o[+s.dataset.k],"o")};
+$("board").onclick=e=>{const c=e.target.closest(".cell");if(!c||busy)return;const i=+c.dataset.i;
+  if(G.board[i]){cardInfo(G.board[i].c,G.board[i].o);return}
+  if(G.turn!=="p")return;if(sel<0){toast("Önce elinden bir kart seç");return}
+  const k=sel;sel=-1;doPlace("p",k,i)};
+async function doPlace(who,k,i){
+  busy=true;
+  const card=G.hands[who].splice(k,1)[0];
+  const res=place(G.board,i,card,who,G.rules);
+  G.board[i]={c:card,o:who};G.last=i;renderGame();
+  const el0=$("board").children[i].firstElementChild;el0&&el0.classList.add("drop");
+  tone(who==="p"?392:330,.1,"triangle");buzz(12);
+  await wait(300);
+  let n=0;
+  for(const st of res.steps){
+    if(st.kind){const p=$("pop");p.textContent=st.kind;p.classList.remove("go");void p.offsetWidth;p.classList.add("go");tone(880,.15,"square",.05);tone(1175,.2,"square",.05,.1);await wait(350)}
+    for(const j of st.cells){const el=$("board").children[j].firstElementChild;el.classList.add("flip");setTimeout(()=>{el.classList.remove("p","o");el.classList.add(who)},230)}
+    for(const j of st.cells)G.board[j]={c:G.board[j].c,o:who};
+    n+=st.cells.length;tone(who==="p"?523+n*60:300-n*20,.12,"sine",.08);buzz(20);
+    await wait(500);
+  }
+  G.board=res.b;
+  if(G.board.every(x=>x)){renderGame();await wait(400);return endMatch()}
+  G.turn=who==="p"?"o":"p";renderGame();busy=false;
+  if(G.turn==="o")aiTurn();
+}
+async function aiTurn(){
+  busy=true;await wait(550);
+  const m=aiMove();
+  const el=$("handO").children[m.k];el&&el.classList.add("think");
+  await wait(420);
+  doPlace("o",m.k,m.i);
+}
+function endMatch(){
+  const sc=scores();S.matches++;
+  const win=sc.p>sc.o,draw=sc.p===sc.o;
+  const st=win?(sc.p>=8?3:sc.p>=7?2:1):0;
+  let reward="",earn=0,nextBtn="";
+  if(win){S.wins++;
+    if(G.mode==="lv"){
+      const prev=S.lv[G.L]||0,first=!prev;
+      earn=first?st+2:Math.max(1,st-prev);
+      if(st>prev)S.lv[G.L]=st;
+      const rid=REWARD[G.L-1];
+      if(first&&rid&&!S.own.includes(rid)){S.own.push(rid);reward=`<p style="color:var(--gold2);font-weight:700">🎁 Yeni kart kazandın!</p><div class="big" id="rwCard" style="cursor:pointer">${cardHTML(C[rid],"p")}</div><div class="fact">${C[rid].f}</div>`}
+      else if(first&&!rid){earn+=5}
+      if(G.L<30)nextBtn=`<button class="btn main" id="rNext">Sonraki Durak ▶</button>`;
+    }else{
+      const d=today();
+      if(S.daily.last!==d){const y=new Date();y.setDate(y.getDate()-1);const ys=y.getFullYear()+"-"+String(y.getMonth()+1).padStart(2,"0")+"-"+String(y.getDate()).padStart(2,"0");
+        S.daily.streak=S.daily.last===ys?S.daily.streak+1:1;S.daily.last=d;earn=5+Math.min(S.daily.streak,7);
+        reward=`<p>🔥 Günlük seri: <b>${S.daily.streak} gün</b></p>`}
+      else reward=`<p style="color:var(--mute)">Bugünkü ödülü zaten aldın. Yarın yeni düello seni bekliyor!</p>`;
+    }
+    S.wallet+=earn;
+  }
+  save();
+  if(win){tone(523,.15);tone(659,.15,"sine",.07,.15);tone(784,.3,"sine",.07,.3);buzz([30,40,60])}else{tone(330,.2);tone(262,.35,"sine",.07,.2)}
+  modal(`<h2>${win?"Tebrikler! 🎉":draw?"Berabere":"Kaybettin"}</h2>
+   <div class="stars3">${[0,1,2].map(i=>`<span class="${i<st?"":"off"}">★</span>`).join("")}</div>
+   <p>Sen <b>${sc.p}</b> — <b>${sc.o}</b> Rakip</p>
+   ${earn?`<p>+${earn} ⭐ yıldız</p>`:""}
+   ${reward}
+   ${!win?`<p style="color:var(--mute);font-size:13.5px">${tipText()}</p>`:""}
+   ${nextBtn}
+   <button class="btn ${nextBtn?"":"main"}" id="rAgain">↻ Tekrar Oyna</button>
+   <button class="btn" id="rMenu">${G.mode==="lv"?"🗺️ Haritaya Dön":"🏠 Ana Menü"}</button>`);
+  const L=G.L,mode=G.mode;
+  if($("rNext"))$("rNext").onclick=()=>{closeModal();startLevel(L+1)};
+  $("rAgain").onclick=()=>{closeModal();mode==="lv"?startLevel(L):startDaily()};
+  $("rMenu").onclick=()=>{closeModal();show(mode==="lv"?"map":"home")};
+  checkBreak();
+}
+const TIPS=["İpucu: Köşelere zayıf kenarları duvara bakacak şekilde koy; böylece o kenarlar saldırıya açık kalmaz.","İpucu: Güçlü kartlarını sona saklamak çoğu zaman oyunu çevirir.","İpucu: Destene yeni kartlar ekle; Kartlarım ekranından yıldızlarınla kart açabilirsin.","İpucu: Rakibin elindeki kartlar açık. Hamle yapmadan önce onun cevabını düşün!","İpucu: Ortadaki kare dört tarafa açıktır; oraya ancak çok güçlü bir kart koy."];
+const tipText=()=>TIPS[Math.random()*TIPS.length|0];
+$("gBack").onclick=()=>{modal(`<h2>Çıkılsın mı?</h2><p>Bu maç sayılmayacak.</p><button class="btn main" id="qY">Evet, çık</button><button class="btn" id="qN">Devam et</button>`);$("qY").onclick=()=>{closeModal();show(G.mode==="lv"?"map":"home")};$("qN").onclick=closeModal};
+$("gHelp").onclick=()=>howTo();
+
+// ---------- MOLA HATIRLATICI ----------
+const T0=Date.now();let breakShown=0;
+function checkBreak(){const m=(Date.now()-T0)/60000;if(m>=30*(breakShown+1)){breakShown++;setTimeout(()=>modal(`<h2>☕ Mola Vakti</h2><p>${breakShown*30} dakikadır oynuyorsun. Gözlerini dinlendir, biraz su iç, namaz vaktini kontrol et. Oyun burada seni bekler!</p><button class="btn main" id="bOk">Tamam</button>`)||($("bOk").onclick=closeModal),1200)}}
+
+// ---------- EKRANLAR ----------
+function renderHome(){
+  const total=Object.values(S.lv).reduce((a,b)=>a+b,0);
+  $("hStats").innerHTML=`<span class="chip">⭐ ${S.wallet}</span><span class="chip">🎴 ${S.own.length}/${CARDS.length}</span><span class="chip">🏅 ${total}/90</span>${S.daily.streak?`<span class="chip">🔥 ${S.daily.streak}</span>`:""}`;
+  const nx=nextLevel();$("bPlaySub").textContent=nx>30?"Tüm duraklar tamam! Yıldızları topla":`Durak ${nx} · ${CHAPTERS[Math.min(2,(nx-1)/10|0)].n}`;
+  $("bDailySub").textContent=S.daily.last===today()?"Bugünkü ödül alındı ✓":"Bugünün ödülü bekliyor!";
+}
+function nextLevel(){let L=1;while(S.lv[L])L++;return L}
+function renderMap(){
+  $("mWallet").textContent="⭐ "+S.wallet;const nx=nextLevel();
+  $("mapList").innerHTML=CHAPTERS.map((ch,ci)=>`<div class="chap"><h3>${ch.e} ${ch.n}</h3><p>${ch.d}</p><div class="lv">${
+    Array.from({length:10},(_,j)=>{const L=ci*10+j+1,s=S.lv[L]||0,cls=s?"done":L===nx?"next":L>nx?"lk":"";
+      return `<button class="lvb ${cls}" data-l="${L}">${L>nx?"🔒":L}<span class="st">${s?starsStr(s):REWARD[L-1]&&L<=nx?"🎁":""}</span></button>`}).join("")}</div></div>`).join("");
+  setTimeout(()=>{const n=document.querySelector(".lvb.next");n&&n.scrollIntoView({block:"center"})},30);
+}
+$("mapList").onclick=e=>{const b=e.target.closest(".lvb");if(!b)return;const L=+b.dataset.l;if(L>nextLevel()){toast("Önce önceki durağı geç");return}tone(600,.06);startLevel(L)};
+function renderDeck(){
+  $("dWallet").textContent="⭐ "+S.wallet;
+  $("deckRow").innerHTML=Array.from({length:5},(_,k)=>S.deck[k]?`<div class="slot" data-id="${S.deck[k]}">${cardHTML(C[S.deck[k]],"p")}</div>`:`<div class="slot empty">+</div>`).join("");
+  const pow=S.deck.reduce((a,id)=>a+C[id].v.reduce((x,y)=>x+y,0),0);
+  $("collInfo").textContent=`Koleksiyon: ${S.own.length}/${CARDS.length} kart · Deste gücü: ${pow}`;
+  const list=CARDS.slice().sort((a,b)=>a.t-b.t||a.id-b.id);
+  $("coll").innerHTML=list.map(c=>{const own=S.own.includes(c.id);return `<div class="slot ${S.deck.includes(c.id)?"indeck":""}" data-id="${c.id}">${cardHTML(c,own?"p":"n",own?"":"lock")}${own?"":`<span class="price">${PRICE[c.t]} ⭐</span>`}</div>`}).join("");
+}
+$("deckRow").onclick=e=>{const s=e.target.closest(".slot[data-id]");if(!s)return;const id=+s.dataset.id;if(S.deck.length<=1){toast("Destede en az 1 kart kalmalı");return}S.deck=S.deck.filter(x=>x!==id);save();tone(440,.05);renderDeck()};
+$("coll").onclick=e=>{const s=e.target.closest(".slot");if(!s)return;cardInfo(C[+s.dataset.id],"p",true)};
+function cardInfo(c,o,manage){
+  const own=S.own.includes(c.id),inDeck=S.deck.includes(c.id);
+  let btns="";
+  if(manage){
+    if(own)btns=inDeck?`<button class="btn" id="cAct">Desteden çıkar</button>`:`<button class="btn main" id="cAct">Desteye ekle</button>`;
+    else btns=`<button class="btn main" id="cAct">${PRICE[c.t]} ⭐ ile aç</button><p style="font-size:12.5px;color:var(--mute)">Yıldızları duraklarda ve Günün Düellosu'nda kazanırsın. Gerçek para yok.</p>`;
+  }
+  modal(`<h2>${c.e} ${c.n}</h2><div class="big">${cardHTML(c,own||!manage?o:"n")}</div><p style="font-size:13px;color:var(--mute)">${"◆".repeat(c.t)} Seviye ${c.t} · Güç ${c.v.reduce((a,b)=>a+b,0)}</p><div class="fact">${c.f}</div>${btns}<button class="btn" id="cClose">Kapat</button>`);
+  $("cClose").onclick=closeModal;
+  if($("cAct"))$("cAct").onclick=()=>{
+    if(!own){if(S.wallet<PRICE[c.t]){toast(`${PRICE[c.t]-S.wallet} yıldız daha lazım`);return}S.wallet-=PRICE[c.t];S.own.push(c.id);tone(784,.2);buzz(30);if(S.deck.length<5)S.deck.push(c.id)}
+    else if(inDeck){if(S.deck.length<=1){toast("Destede en az 1 kart kalmalı");return}S.deck=S.deck.filter(x=>x!==c.id)}
+    else{if(S.deck.length>=5){toast("Deste dolu. Önce bir kart çıkar");return}S.deck.push(c.id)}
+    save();closeModal();renderDeck();
+  };
+}
+function ruleBasicDemo(){return `<div style="margin:8px 0"><span class="mini">${cardHTML({...C[11],v:[6,5,3,3]},"p")}</span> <b style="font-size:20px">→</b> <span class="mini">${cardHTML({...C[2],v:[4,2,5,2]},"o")}</span></div><p style="font-size:13px;color:var(--mute)">Lale'nin sağı (5), Su'yun solundan (2) büyük: Su senin olur!</p>`}
+function ruleSameDemo(){return `<p style="font-size:13px;color:var(--mute)">Örnek: Kartının üstü 4 ve üstteki kartın altı 4, sağı 6 ve sağdaki kartın solu 6 ise ikisi birden senin olur. Çevrilen kartlar da komşularını yenerse zincir (KOMBO) başlar!</p>`}
+function ruleSumDemo(){return `<p style="font-size:13px;color:var(--mute)">Örnek: Üst taraf 3+7=10, sol taraf 6+4=10. Toplamlar eşit olduğu için o kartlar senin olur ve kombo başlayabilir!</p>`}
+function howTo(){
+  modal(`<h2>📖 Nasıl Oynanır?</h2><ul class="rules">
+  <li>Her oyuncunun 5 kartı var. Sırayla 3×3 tahtaya birer kart koyarsınız.</li>
+  <li>Her kartın 4 kenarında sayı vardır (A = 10).</li>
+  <li>Koyduğun kartın sayısı, değdiği <b>rakip</b> kartın karşı kenarından büyükse o kart <span style="color:var(--p2)">senin rengine</span> döner.</li>
+  </ul>${ruleBasicDemo()}<ul class="rules">
+  <li>Tahta dolunca en çok kartı olan kazanır. 8 ve üstü kart = 3 yıldız!</li>
+  <li><b>Edirne</b>'de AYNI, <b>İstanbul</b>'da TOPLAM kuralı açılır.</li>
+  <li>Duraklarda yeni kartlar kazan, yıldızlarla kart aç, desteni güçlendir.</li>
+  <li>Şans oyunu değildir: kartlar açıktır, kazanmak tamamen stratejiye bağlıdır.</li></ul>
+  <button class="btn main" id="hOk">Hadi Oynayalım</button>`);
+  $("hOk").onclick=closeModal;
+}
+function settings(){
+  modal(`<h2>⚙️ Ayarlar</h2><button class="btn" id="sSnd">Ses ve titreşim: ${S.sound?"Açık 🔊":"Kapalı 🔇"}</button><button class="btn" id="sRst">İlerlemeyi sıfırla</button><p style="font-size:12.5px;color:var(--mute)">Çini Düellosu; kumar, bahis, şans kartı ve gerçek parayla satın alma içermez. İlerlemen bu cihazda saklanır.</p><button class="btn main" id="sOk">Kapat</button>`);
+  $("sSnd").onclick=()=>{S.sound=S.sound?0:1;save();settings()};
+  $("sRst").onclick=()=>{modal(`<h2>Emin misin?</h2><p>Tüm kartların, yıldızların ve durakların silinecek.</p><button class="btn" id="rY">Evet, sıfırla</button><button class="btn main" id="rN">Vazgeç</button>`);$("rY").onclick=()=>{S=defSave();save();closeModal();renderHome()};$("rN").onclick=settings};
+  $("sOk").onclick=closeModal;
+}
+$("bPlay").onclick=()=>{tone(600,.06);if(!S.seen.how){S.seen.how=1;save();howTo();$("hOk").onclick=()=>{closeModal();startLevel(1)};return}show("map")};
+$("bDaily").onclick=()=>{tone(600,.06);startDaily()};
+$("bDeck").onclick=()=>{tone(600,.06);show("deck")};
+$("bHow").onclick=()=>howTo();
+$("bSet").onclick=()=>settings();
+renderHome();
+</script>
+</body>
+</html>
