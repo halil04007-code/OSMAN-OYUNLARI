@@ -725,7 +725,13 @@ bind('crop', null, false); bind('whiteBg', null, false);
 $('sat').addEventListener('input', () => { for (const j in overrides) if (overrides[j] !== 'bg') delete overrides[j]; });
 
 // ---------------- kaydet ----------------
-function download(blob, name){
+let dlCap = null;
+if (window.claude && window.claude.use) window.claude.use('downloads').then(d => { dlCap = d; }).catch(() => {});
+async function download(blob, name){
+  if (dlCap) {
+    try { await dlCap.save({filename: name, data: blob}); } catch (e) { if (e && e.code !== 'declined') alert('Dosya kaydedilemedi.'); }
+    return;
+  }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
